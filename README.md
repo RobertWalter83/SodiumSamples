@@ -6,3 +6,4 @@ The purpose of this it to discuss the implementation and its weaknesses (which a
 Over time, more elaborated examples might follow.
 
 Note that this implementation of Pong makes heavy use of the [Pong example provided by Elm](http://elm-lang.org/examples/pong).
+Also, the user [Ziriax](https://github.com/Ziriax) made a significant contribution to how to move the paddles.
