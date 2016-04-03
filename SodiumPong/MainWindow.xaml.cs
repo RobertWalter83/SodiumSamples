@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Sodium;
 
@@ -25,10 +17,12 @@ namespace SodiumPong
 
     public partial class MainWindow : Window
     {
+        #region constants
         const int dxBoard = 600;
         const int dyBoard = 400;
         const int dxBoardHalf = dxBoard / 2;
         const int dyBoardHalf = dyBoard / 2;
+        #endregion
 
         private readonly StreamSink<KeyEventArgs> sKeyEvents = new StreamSink<KeyEventArgs>();
         private readonly StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
