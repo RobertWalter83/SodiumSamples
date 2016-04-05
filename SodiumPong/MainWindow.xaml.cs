@@ -21,6 +21,7 @@ namespace SodiumPong
 
         public MainWindow()
         {
+            #region initialize board visuals
             InitializeComponent();
 
             this.cvs.Width = dxBoard;
@@ -54,6 +55,7 @@ namespace SodiumPong
 
             Canvas.SetLeft(textRunPause, dxBoardHalf);
             Canvas.SetTop(textRunPause, dyBoard - 30);
+            #endregion
 
             // Sodium best practice: wrap your FRP code in an explicit transaction
             Transaction.RunVoid(() =>
