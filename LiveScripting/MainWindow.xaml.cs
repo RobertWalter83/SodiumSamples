@@ -37,8 +37,7 @@ namespace LiveScripting
                     txtInput.Dispatcher.InvokeAsync(() => sTextChanged.Send(textCur));
                 };
 
-                Cell<ScriptStateExtended> cScriptState = sTextChanged.Accum(ScriptStateExtended.Nil,
-                    (code, sse) => Execute(code, sse.scriptState));
+                Cell<ScriptStateExtended> cScriptState = sTextChanged.Accum(ScriptStateExtended.Nil, Execute);
 
                 cScriptState.Listen(sse =>
                     txtResult.Text = sse.cee == null
@@ -48,18 +47,18 @@ namespace LiveScripting
             });
         }
 
-        private static ScriptStateExtended Execute(string code, Task<ScriptState<object>> scriptState)
+        private static ScriptStateExtended Execute(string code, ScriptStateExtended sse)
         {
             try
             {
-                if (scriptState == null)
+                if (sse.scriptState == null)
                     return new ScriptStateExtended(CSharpScript.RunAsync(code), null);
 
-                return new ScriptStateExtended(scriptState.Result.ContinueWithAsync(code), null);
+                return new ScriptStateExtended(sse.scriptState.Result.ContinueWithAsync(code), null);
             }
             catch (CompilationErrorException cee)
             {
-                return new ScriptStateExtended(scriptState, cee);
+                return new ScriptStateExtended(sse.scriptState, cee);
             }
         }
 
