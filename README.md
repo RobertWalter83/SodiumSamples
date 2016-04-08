@@ -23,6 +23,10 @@ If there are compiler errors, it shows the message of the first error instead.
 
 Best thing is to try it out, but if you want to know how it looks like, see here:
 
-![live_ex1](live_ex1.png)  
+![live_ex1](live_ex1.png)
+
+And a bit more sophisticated:
+
+![live_ex2](live_ex2.png)  
 
 Over time, more elaborated examples might follow.
