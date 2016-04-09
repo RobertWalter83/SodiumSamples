@@ -1,9 +1,11 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Sodium;
+using Label = System.Reflection.Emit.Label;
 
 namespace LiveScripting
 {
@@ -12,14 +14,9 @@ namespace LiveScripting
         public MainWindow()
         {
             InitializeComponent();
-
+            
             Transaction.RunVoid(() =>
             {
-                var cShowErrors = new CellSink<bool?>(rdbErrors.IsChecked);
-
-                rdbErrors.Checked += (sender, args) => cShowErrors.Send(true);
-                rdbErrors.Unchecked += (sender, args) => cShowErrors.Send(false);
-
                 var sTextChanged = new StreamSink<string>();
 
                 txtInput.Document.Changed += (sender, args) =>
@@ -28,31 +25,36 @@ namespace LiveScripting
                     txtInput.Dispatcher.InvokeAsync(() => sTextChanged.Send(textCur));
                 };
 
-                CellLoop<ExecutionResult> cExecutionResult = new CellLoop<ExecutionResult>();
-                Stream<ExecutionResult> sExecutionResult = sTextChanged.Snapshot(cExecutionResult, cShowErrors, Execute);
-                cExecutionResult.Loop(sExecutionResult.Hold(ExecutionResult.Nil));
-
+                Cell<ExecutionResult> cExecutionResult = sTextChanged.Accum(ExecutionResult.Nil, Execute);
+                
                 cExecutionResult.Listen(executionResult =>
-                    txtResult.Text = executionResult.compilerException == null || !executionResult.fShowErrors
-                        ? executionResult.taskScriptState?.Result?.ReturnValue?.ToString()
-                        : executionResult.compilerException.Message
-                );
+                {
+                    if (executionResult.compilerException == null)
+                    {
+                        txtResult.Text = executionResult.taskScriptState?.Result?.ReturnValue?.ToString();
+                        lblError.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        lblError.Text = executionResult.compilerException.Message;
+                        lblError.Visibility = Visibility.Visible;
+                    }
+                });
             });
         }
 
-        private static ExecutionResult Execute(string code, ExecutionResult sse, bool? fShowErrors)
+        private static ExecutionResult Execute(string code, ExecutionResult sse)
         {
-            bool _fShowErrors = !fShowErrors.HasValue || fShowErrors.Value;
             try
             {
                 if (sse.taskScriptState == null)
-                    return new ExecutionResult(CSharpScript.RunAsync(code), null, _fShowErrors);
+                    return new ExecutionResult(CSharpScript.RunAsync(code), null);
 
-                return new ExecutionResult(sse.taskScriptState.Result.ContinueWithAsync(code), null, _fShowErrors);
+                return new ExecutionResult(sse.taskScriptState.Result.ContinueWithAsync(code), null);
             }
             catch (CompilationErrorException cee)
             {
-                return new ExecutionResult(sse.taskScriptState, cee, _fShowErrors);
+                return new ExecutionResult(sse.taskScriptState, cee);
             }
         }
 
@@ -60,14 +62,12 @@ namespace LiveScripting
         {
             internal readonly Task<ScriptState<object>> taskScriptState;
             internal readonly CompilationErrorException compilerException;
-            internal readonly bool fShowErrors;
-            internal static readonly ExecutionResult Nil = new ExecutionResult(null, null, true);
+            internal static readonly ExecutionResult Nil = new ExecutionResult(null, null);
 
-            internal ExecutionResult(Task<ScriptState<object>> taskScriptState, CompilationErrorException compilerException, bool fShowErrors)
+            internal ExecutionResult(Task<ScriptState<object>> taskScriptState, CompilationErrorException compilerException)
             {
                 this.taskScriptState = taskScriptState;
                 this.compilerException = compilerException;
-                this.fShowErrors = fShowErrors;
             }
         }
     }
