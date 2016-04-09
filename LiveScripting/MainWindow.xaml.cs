@@ -61,19 +61,15 @@ namespace LiveScripting
 
         /**
          * Ran each time the document changes.
-         * Within a session, we keep the scriptstate alive, meaning that you can access variables you declared once but deleted from teh script later.
-         * Thankfully, ContinueWithAsync allows us to override the same identifier.
-         *
+         * we always re-run the whole script, currently. ScriptState.ContinueWithAsync is an option, but it would run
+         * "intermediate steps" of the script as well, which can have weird side effects for the user.
          * In case of a compiler error, we keep the last script state alive and store the compiler error to display it on the screen
          */
         private static ExecutionResult Execute(string code, ExecutionResult executionResult)
         {
             try
             {
-                if (executionResult.taskScriptState == null)
-                    return new ExecutionResult(CSharpScript.RunAsync(code), null);
-
-                return new ExecutionResult(executionResult.taskScriptState.Result.ContinueWithAsync(code), null);
+                return new ExecutionResult(CSharpScript.RunAsync(code), null);
             }
             catch (CompilationErrorException cee)
             {

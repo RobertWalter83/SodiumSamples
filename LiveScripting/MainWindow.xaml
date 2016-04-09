@@ -25,7 +25,8 @@
             x:Name="txtInput"
             FontFamily="Consolas"
             SyntaxHighlighting="C#"
-            FontSize="10pt"/>
+            FontSize="10pt"
+            ShowLineNumbers="True"/>
         <Grid Name="gridResult" Grid.Row="1" Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
