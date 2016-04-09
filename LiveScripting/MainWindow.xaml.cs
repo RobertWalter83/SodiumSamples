@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ICSharpCode.AvalonEdit.Document;
@@ -12,7 +14,7 @@ namespace LiveScripting
     public partial class MainWindow : Window
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
-
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -36,14 +38,14 @@ namespace LiveScripting
                  */
                 cExecutionResult.Listen(executionResult =>
                 {
-                    if (executionResult.compilerException == null)
+                    if (executionResult.errorMessage == null)
                     {
-                        txtResult.Text = executionResult.taskScriptState?.Result?.ReturnValue?.ToString();
+                        txtResult.Text = executionResult.scriptState?.ReturnValue?.ToString();
                         lblError.Visibility = Visibility.Collapsed;
                     }
                     else
                     {
-                        lblError.Text = executionResult.compilerException.Message;
+                        lblError.Text = executionResult.errorMessage;
                         lblError.Visibility = Visibility.Visible;
                     }
                 });
@@ -69,24 +71,32 @@ namespace LiveScripting
         {
             try
             {
-                return new ExecutionResult(CSharpScript.RunAsync(code), null);
+                return new ExecutionResult(CSharpScript.RunAsync(code).Result, null);
             }
-            catch (CompilationErrorException cee)
+            catch (Exception ex)
             {
-                return new ExecutionResult(executionResult.taskScriptState, cee);
+                string errorMessage;
+                if (ex is AggregateException && ex.InnerException != null)
+                    errorMessage = "Runtime error: " + ex.InnerException.Message;
+                else if (ex is CompilationErrorException)
+                    errorMessage = "Compile time error: " + ex.Message;
+                else
+                    errorMessage = "Unknown error: " + ex.Message;
+
+                return new ExecutionResult(executionResult.scriptState, errorMessage);
             }
         }
 
         private struct ExecutionResult
         {
-            internal readonly Task<ScriptState<object>> taskScriptState;
-            internal readonly CompilationErrorException compilerException;
+            internal readonly ScriptState<object> scriptState;
+            internal readonly string errorMessage;
             internal static readonly ExecutionResult Nil = new ExecutionResult(null, null);
 
-            internal ExecutionResult(Task<ScriptState<object>> taskScriptState, CompilationErrorException compilerException)
+            internal ExecutionResult(ScriptState<object> scriptState, string errorMessage)
             {
-                this.taskScriptState = taskScriptState;
-                this.compilerException = compilerException;
+                this.scriptState = scriptState;
+                this.errorMessage = errorMessage;
             }
         }
     }
