@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Sodium;
-using Label = System.Reflection.Emit.Label;
 
 namespace LiveScripting
 {
