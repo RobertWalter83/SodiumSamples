@@ -17,8 +17,8 @@ Also, the user [Ziriax](https://github.com/Ziriax) made a significant contributi
 
 This project uses the C# Scripting package of the [.NET Compiler Platform (a.k.a Roslyn)](https://github.com/dotnet/roslyn), Sodium, and the [AvalonEdit package](https://github.com/icsharpcode/AvalonEdit). 
 You can get this packages installed via NuGet:
-. [CSharp.Scripting (used version: 1.2.1)](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting).
-. [AvalonEdit (used version: 5.0.3.0)](https://www.nuget.org/packages/AvalonEdit)
+- [CSharp.Scripting (used version: 1.2.1)](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting).
+- [AvalonEdit (used version: 5.0.3.0)](https://www.nuget.org/packages/AvalonEdit)
 
 This application gives you a simple multiline TextBox to enter C# scripts. It will try to compile your input on-the-fly and print the result into the adjacent TextBox (read-only).
 If there are compiler errors, it shows the message of the first error instead.
