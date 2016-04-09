@@ -4,20 +4,44 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LiveScripting"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="Live Scripting C#" Height="350" Width="525">
+        Title="Live Scripting C# with Avalon Editor" Height="550" Width="825">
     <Grid Name="gridMain">
         <Grid.RowDefinitions>
-           <RowDefinition Height="30" />
-           <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-           <ColumnDefinition Width="0.5*" />
-           <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="0.5*" />
+            <ColumnDefinition Width="0.5*" />
         </Grid.ColumnDefinitions>
+        
         <Label Grid.Row="0" Grid.Column="0" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">Type your C# script here</Label>
-        <Label Grid.Row="0" Grid.Column="1" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
-        <TextBox Name="txtInput" Grid.Row="1" Grid.Column="0" FontFamily="Consolas"/>
+
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.3*" />
+                <ColumnDefinition Width="0.6*" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
+            <Grid Grid.Row="0" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.35*" />
+                    <ColumnDefinition Width="0.5*" />
+                </Grid.ColumnDefinitions>
+                <RadioButton Name="rdbErrors" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True">Show errors</RadioButton>
+                <RadioButton Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">Show last valid result</RadioButton>
+            </Grid>
+           
+        </Grid>
+        
+        <avalonedit:TextEditor
+            Grid.Row="1" Grid.Column="0"
+            x:Name="txtInput"
+            FontFamily="Consolas"
+            SyntaxHighlighting="C#"
+            FontSize="10pt"/>
         <TextBox Name="txtResult" Grid.Row="1" Grid.Column="1" FontFamily="Consolas" Background="WhiteSmoke" IsReadOnly="True"/>
     </Grid>
 </Window>

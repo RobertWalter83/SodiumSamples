@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Sodium;
@@ -23,55 +12,62 @@ namespace LiveScripting
         public MainWindow()
         {
             InitializeComponent();
-            txtInput.AcceptsTab = true;
-            txtInput.AcceptsReturn = true;
-            txtInput.TextWrapping = TextWrapping.Wrap;
 
             Transaction.RunVoid(() =>
             {
+                var cShowErrors = new CellSink<bool?>(rdbErrors.IsChecked);
+
+                rdbErrors.Checked += (sender, args) => cShowErrors.Send(true);
+                rdbErrors.Unchecked += (sender, args) => cShowErrors.Send(false);
+
                 var sTextChanged = new StreamSink<string>();
 
-                txtInput.TextChanged += (sender, args) =>
+                txtInput.Document.Changed += (sender, args) =>
                 {
-                    var textCur = (args.Source as TextBox)?.Text;
+                    var textCur = (sender as TextDocument)?.Text;
                     txtInput.Dispatcher.InvokeAsync(() => sTextChanged.Send(textCur));
                 };
 
-                Cell<ScriptStateExtended> cScriptState = sTextChanged.Accum(ScriptStateExtended.Nil, Execute);
+                CellLoop<ExecutionResult> cExecutionResult = new CellLoop<ExecutionResult>();
+                Stream<ExecutionResult> sExecutionResult = sTextChanged.Snapshot(cExecutionResult, cShowErrors, Execute);
+                cExecutionResult.Loop(sExecutionResult.Hold(ExecutionResult.Nil));
 
-                cScriptState.Listen(sse =>
-                    txtResult.Text = sse.cee == null
-                        ? sse.scriptState?.Result?.ReturnValue?.ToString()
-                        : sse.cee.Message
+                cExecutionResult.Listen(executionResult =>
+                    txtResult.Text = executionResult.compilerException == null || !executionResult.fShowErrors
+                        ? executionResult.taskScriptState?.Result?.ReturnValue?.ToString()
+                        : executionResult.compilerException.Message
                 );
             });
         }
 
-        private static ScriptStateExtended Execute(string code, ScriptStateExtended sse)
+        private static ExecutionResult Execute(string code, ExecutionResult sse, bool? fShowErrors)
         {
+            bool _fShowErrors = !fShowErrors.HasValue || fShowErrors.Value;
             try
             {
-                if (sse.scriptState == null)
-                    return new ScriptStateExtended(CSharpScript.RunAsync(code), null);
+                if (sse.taskScriptState == null)
+                    return new ExecutionResult(CSharpScript.RunAsync(code), null, _fShowErrors);
 
-                return new ScriptStateExtended(sse.scriptState.Result.ContinueWithAsync(code), null);
+                return new ExecutionResult(sse.taskScriptState.Result.ContinueWithAsync(code), null, _fShowErrors);
             }
             catch (CompilationErrorException cee)
             {
-                return new ScriptStateExtended(sse.scriptState, cee);
+                return new ExecutionResult(sse.taskScriptState, cee, _fShowErrors);
             }
         }
 
-        private struct ScriptStateExtended
+        private struct ExecutionResult
         {
-            internal readonly Task<ScriptState<object>> scriptState;
-            internal readonly CompilationErrorException cee;
-            internal static readonly ScriptStateExtended Nil = new ScriptStateExtended(null, null);
+            internal readonly Task<ScriptState<object>> taskScriptState;
+            internal readonly CompilationErrorException compilerException;
+            internal readonly bool fShowErrors;
+            internal static readonly ExecutionResult Nil = new ExecutionResult(null, null, true);
 
-            internal ScriptStateExtended(Task<ScriptState<object>> scriptState, CompilationErrorException cee)
+            internal ExecutionResult(Task<ScriptState<object>> taskScriptState, CompilationErrorException compilerException, bool fShowErrors)
             {
-                this.scriptState = scriptState;
-                this.cee = cee;
+                this.taskScriptState = taskScriptState;
+                this.compilerException = compilerException;
+                this.fShowErrors = fShowErrors;
             }
         }
     }
