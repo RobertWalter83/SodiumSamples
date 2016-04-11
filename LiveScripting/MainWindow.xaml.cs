@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -14,29 +17,45 @@ namespace LiveScripting
         public MainWindow()
         {
             InitializeComponent();
-            
+           
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
                 txtInput.Document.Changed += DocumentChangedHandler;
 
                 /**
-                 * we accumulate the state of our C# script on each document change
-                 * we start with a "nil" state
+                 * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
+                 * we accumulate the state of our C# script on each document change, running the new code in
+                   context of cScriptState.
+                 * the scriptState that gets updated (sExecResult) is initialized with Nil
                  */
-                Cell<ExecutionResult> cExecutionResult = sDocChanged.Accum(ExecutionResult.Nil, Execute);
-                
+                Cell<ScriptState<object>> cScriptStart = Cell.Constant(SetupResultCanvas().Result);
+                CellLoop<ExecutionResult> cExecResult = new CellLoop<ExecutionResult>();
+                Stream<ExecutionResult> sExecResult = sDocChanged.Snapshot(cExecResult, cScriptStart, Execute);
+                cExecResult.Loop(sExecResult.Hold(ExecutionResult.Nil));
+
                 /**
-                 * we interface our FRP logic with WPF
-                 * if the execution result doesn't contain a compiler error, 
-                   we try to retrieve the result of the script and collapse the error message
-                 * if there is an error, we keep showing the last valid result, but highlight the current error
+                 * look for a main variable that we can render if it holds a Drawing
                  */
-                cExecutionResult.Listen(executionResult =>
+                Cell<ScriptVariable> cMain =
+                    cExecResult.Map(result => GetVariable(result.scriptState, "main", typeof (Drawing)));
+
+                cMain.Listen(main =>
+                {
+                    var drawing = main?.Value as Drawing;
+                    if (drawing == null)
+                        return;
+
+                    using (var dc = vh.Dv.RenderOpen())
+                    {
+                        dc.DrawDrawing(drawing);
+                    }
+                });
+
+                cExecResult.Listen(executionResult =>
                 {
                     if (executionResult.errorMessage == null)
                     {
-                        txtResult.Text = executionResult.scriptState?.ReturnValue?.ToString();
                         lblError.Visibility = Visibility.Collapsed;
                     }
                     else
@@ -46,6 +65,25 @@ namespace LiveScripting
                     }
                 });
             });
+        }
+
+        private static ScriptVariable GetVariable(ScriptState<object> scriptState, string name, Type type)
+        {
+             return scriptState?.Variables.First(variable => variable.Name == name && variable.Type == type);
+        }
+
+        public async Task<ScriptState<object>> SetupResultCanvas()
+        {
+            var options = ScriptOptions.Default
+                .WithReferences(typeof(Setup).Assembly);
+
+            var scriptState =
+                await
+                    CSharpScript.RunAsync<object>(
+                        @"using LiveScripting;",
+                        options);
+
+            return scriptState;
         }
 
         /**
@@ -63,11 +101,11 @@ namespace LiveScripting
          * "intermediate steps" of the script as well, which can have weird side effects for the user.
          * In case of a compiler error, we keep the last script state alive and store the compiler error to display it on the screen
          */
-        private static ExecutionResult Execute(string code, ExecutionResult executionResult)
+        private ExecutionResult Execute(string code, ExecutionResult executionResult, ScriptState<object> scriptStart)
         {
             try
             {
-                return new ExecutionResult(CSharpScript.RunAsync(code).Result, null);
+                return new ExecutionResult(scriptStart.ContinueWithAsync(code).Result, null);
             }
             catch (Exception ex)
             {
