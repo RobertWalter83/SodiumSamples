@@ -20,15 +20,9 @@ You can get this packages installed via NuGet:
 - [CSharp.Scripting (used version: 1.2.1)](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting).
 - [AvalonEdit (used version: 5.0.3.0)](https://www.nuget.org/packages/AvalonEdit)
 
-This application gives you a simple multiline TextBox to enter C# scripts. It will try to compile your input on-the-fly and print the result into the adjacent TextBox (read-only).
-If there are compiler errors, it shows the message of the first error instead.
+This is a work-in-progress live scripting application. You can plain C# to show Drawing_s in real time (while you type) on the right side of the app.
+Not tested and just for the purpose of personal education. Still fun. 
 
-Best thing is to try it out, but if you want to know how it looks like, see here:
-
-![live_ex1](live_ex1.png)
-
-And a bit more sophisticated:
-
-![live_ex2](live_ex2.png)  
+ 
 
 Over time, more elaborated examples might follow.
