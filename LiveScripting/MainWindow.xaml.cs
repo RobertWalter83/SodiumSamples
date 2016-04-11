@@ -38,13 +38,28 @@ namespace LiveScripting
                  * look for a main variable that we can render if it holds a Drawing
                  */
                 Cell<ScriptVariable> cMain =
-                    cExecResult.Map(result => GetVariable(result.scriptState, "main", typeof (Drawing)));
+                    cExecResult.Map(result => GetVariable(result.scriptState, "main"));
 
                 cMain.Listen(main =>
                 {
-                    var drawing = main?.Value as Drawing;
-                    if (drawing == null)
+                    if (main == null)
+                    {
+                        using (var dc = vh.Dv.RenderOpen())
+                        {
+                            dc.DrawDrawing(Graphics.Drawing.Show("<nothing to render: no main variable found>"));
+                        }
                         return;
+                    }
+
+                    var drawing = main.Value as Drawing;
+                    if (drawing == null)
+                    {
+                        using (var dc = vh.Dv.RenderOpen())
+                        {
+                            dc.DrawDrawing(Graphics.Drawing.Show("<nothing to render: main variable must be of type 'Drawing'"));
+                        }
+                        return;
+                    }
 
                     using (var dc = vh.Dv.RenderOpen())
                     {
@@ -67,9 +82,17 @@ namespace LiveScripting
             });
         }
 
-        private static ScriptVariable GetVariable(ScriptState<object> scriptState, string name, Type type)
+        private static ScriptVariable GetVariable(ScriptState<object> scriptState, string name)
         {
-             return scriptState?.Variables.First(variable => variable.Name == name && variable.Type == type);
+            if (scriptState == null)
+                return null;
+
+            foreach (var variable in scriptState.Variables)
+            {
+                if (variable.Name == name)
+                    return variable;
+            }
+            return null;
         }
 
         public async Task<ScriptState<object>> SetupResultCanvas()
