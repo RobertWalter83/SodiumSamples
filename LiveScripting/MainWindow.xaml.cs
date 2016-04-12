@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -102,7 +100,7 @@ namespace LiveScripting
         public async Task<ScriptState<object>> SetupResultCanvas()
         {
             var options = ScriptOptions.Default
-                .WithReferences(typeof(Setup).Assembly);
+                .WithReferences(typeof(Element).Assembly);
 
             var scriptState =
                 await
