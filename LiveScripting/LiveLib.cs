@@ -59,7 +59,7 @@ namespace LiveScripting
 
         public static Text Text(string st)
         {
-            return new Text {Text = LiveScripting.Text.FromString(st)};
+            return LiveScripting.Text.FromString(st);
         }
 
         public static class Drawing
@@ -208,11 +208,11 @@ namespace LiveScripting
 
     public class Text : Element
     {
-        public static FormattedText FromString(string st)
+        public static Text FromString(string st)
         {
-            return new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            return new Text {Text = new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
                 new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-                12d, Brushes.Black);
+                12d, Brushes.Black)};
         }
 
         internal new Drawing Drawing
