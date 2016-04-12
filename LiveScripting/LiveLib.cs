@@ -30,13 +30,13 @@ namespace LiveScripting
     {
         internal static readonly Point PointZero = new Point(0, 0);
 
-        public static Collage Collage(int w, int h, IEnumerable<dynamic> elements)
+        public static Collage Collage(int w, int h, params dynamic[] elements)
         {
             Collage collage = new Collage {Width = w, Height = h};
             foreach (var element in elements)
             {
-                var eleNew = Drawing.Show(element);
-                collage.Add(eleNew);
+                Element eleNew = Drawing.Show(element);
+                collage.Add(eleNew.Drawing);
             }
 
             return collage;
@@ -81,7 +81,9 @@ namespace LiveScripting
 
             public static Element Show(Text text)
             {
-                return text;
+                var clone = text.Clone<Text>();
+                clone.Drawing = new GeometryDrawing(Brushes.Black, null, text.FormattedText.BuildGeometry(PointZero));
+                return clone;
             }
 
             public static Element Show(Rect rect)
@@ -125,14 +127,16 @@ namespace LiveScripting
 
         internal Drawing Drawing { get; set; }
 
-        internal FormattedText Text { get; set; }
+        internal virtual void Draw(DrawingContext dc)
+        {
+            dc.DrawDrawing(Drawing);
+        }
 
-        internal abstract void Draw(DrawingContext dc);
-        
         protected virtual void CloneAction(Element clone)
         {
             clone.Width = Width;
             clone.Height = Height;
+            clone.Drawing = Drawing;
         }
 
         internal T Clone<T>() where T : Element, new()
@@ -145,128 +149,59 @@ namespace LiveScripting
 
     public class Rect : Element
     {
-        internal new FormattedText Text
-        {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set Text for Rect."); }
-        }
-
-        internal override void Draw(DrawingContext dc)
-        {
-            dc.DrawDrawing(Drawing);
-        }
-
-        protected override void CloneAction(Element clone)
-        {
-            base.CloneAction(clone);
-            clone.Drawing = this.Drawing;
-        }
     }
 
     public class Oval : Element
     {
-        internal new FormattedText Text
-        {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set Text for Oval."); }
-        }
-
-        protected override void CloneAction(Element clone)
-        {
-            base.CloneAction(clone);
-            clone.Drawing = this.Drawing;
-        }
-
-        internal override void Draw(DrawingContext dc)
-        {
-            dc.DrawDrawing(Drawing);
-        }
     }
 
     public class Image : Element
     {
         internal string Src { get; set; }
 
-        internal new FormattedText Text
-        {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set Text for Image."); }
-        }
-
         protected override void CloneAction(Element clone)
         {
             base.CloneAction(clone);
-            clone.Drawing = Drawing;
             (clone as Image).Src = Src;
-        }
-
-        internal override void Draw(DrawingContext dc)
-        {
-            dc.DrawDrawing(Drawing);
         }
     }
 
     public class Text : Element
     {
+        internal FormattedText FormattedText { get; set; }
+    
         public static Text FromString(string st)
         {
-            return new Text {Text = new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            return new Text {
+                FormattedText = new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
                 new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-                12d, Brushes.Black)};
-        }
-
-        internal new Drawing Drawing
-        {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set 'Drawing' for Text."); }
+                14d, Brushes.Black)};
         }
 
         protected override void CloneAction(Element clone)
         {
             base.CloneAction(clone);
-            clone.Text = Text;
-        }
-
-        internal override void Draw(DrawingContext dc)
-        {
-            dc.DrawText(Text, Graphics.PointZero);
+            (clone as Text).FormattedText = FormattedText;
         }
     }
 
     public class Collage : Element
     {
-        internal readonly IList<Element> rgElement = new List<Element>();  
-
-        public void Add(Element ele)
+        
+        internal Collage()
         {
-            rgElement.Add(ele);
+            Drawing = new DrawingGroup();
         }
 
-        internal new Drawing Drawing
+        public void Add(Drawing drawing)
         {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set 'Drawing' for Collage."); }
-        }
-
-        internal new FormattedText Text
-        {
-            get { return null; }
-            set { throw new InvalidOperationException("Cannot set 'Text' for Collage."); }
-        }
-
-        protected override void CloneAction(Element clone)
-        {
-            base.CloneAction(clone);
-            foreach (var element in rgElement)
-                (clone as Collage).Add(element);
+            (Drawing as DrawingGroup).Children.Add(drawing);
         }
 
         internal override void Draw(DrawingContext dc)
         {
             dc.PushClip(new RectangleGeometry(new System.Windows.Rect(new Size(Width, Height))));
-            
-            foreach (var ele in rgElement)
-                ele.Draw(dc);
+            base.Draw(dc);
         }
     }
 }

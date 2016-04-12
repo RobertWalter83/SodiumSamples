@@ -82,7 +82,7 @@ namespace LiveScripting
         {
             using (var dc = vh.Dv.RenderOpen())
             {
-                dc.DrawText(Graphics.Drawing.Show(text).Text, Graphics.PointZero);
+                Graphics.Drawing.Show(text).Draw(dc);
             }
         }
 
