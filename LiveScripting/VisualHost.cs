@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 
 namespace LiveScripting
@@ -16,13 +14,6 @@ namespace LiveScripting
             this.AddLogicalChild(Dv);
         }
 
-        //public void Add(DrawingVisual dv)
-        //{
-        //    RgDv.Add(dv);
-        //    this.AddVisualChild(dv);
-        //    this.AddLogicalChild(dv);
-        //}
-
         // Provide a required override for the VisualChildrenCount property.
         protected override int VisualChildrenCount
         {
@@ -32,9 +23,6 @@ namespace LiveScripting
         // Provide a required override for the GetVisualChild method.
         protected override Visual GetVisualChild(int index)
         {
-            //if (index < 0 || index >= RgDv.Count)
-            //    throw new IndexOutOfRangeException();
-
             return Dv;
         }
     }
