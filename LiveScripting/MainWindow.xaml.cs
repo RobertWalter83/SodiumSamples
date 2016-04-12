@@ -44,42 +44,46 @@ namespace LiveScripting
                 {
                     if (main == null)
                     {
-                        using (var dc = vh.Dv.RenderOpen())
-                        {
-                            dc.DrawDrawing(Graphics.Drawing.Show("<nothing to render: no main variable found>"));
-                        }
+                        DisplayTextResult("<nothing to render: no main variable found>");
                         return;
                     }
 
-                    var drawing = main.Value as Drawing;
-                    if (drawing == null)
+                    var element = main.Value as Element;
+                    if (element == null)
                     {
-                        using (var dc = vh.Dv.RenderOpen())
-                        {
-                            dc.DrawDrawing(Graphics.Drawing.Show("<nothing to render: main variable must be of type 'Drawing'"));
-                        }
+                        DisplayTextResult("<nothing to render: main variable must be of type 'Element'");
                         return;
                     }
 
                     using (var dc = vh.Dv.RenderOpen())
                     {
-                        dc.DrawDrawing(drawing);
+                        element.Draw(dc);
                     }
                 });
 
-                cExecResult.Listen(executionResult =>
-                {
-                    if (executionResult.errorMessage == null)
-                    {
-                        lblError.Visibility = Visibility.Collapsed;
-                    }
-                    else
-                    {
-                        lblError.Text = executionResult.errorMessage;
-                        lblError.Visibility = Visibility.Visible;
-                    }
-                });
+                cExecResult.Listen(HandleError);
             });
+        }
+
+        private void HandleError(ExecutionResult executionResult)
+        {
+            if (executionResult.errorMessage == null)
+            {
+                lblError.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                lblError.Text = executionResult.errorMessage;
+                lblError.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void DisplayTextResult(string text)
+        {
+            using (var dc = vh.Dv.RenderOpen())
+            {
+                dc.DrawText(Graphics.Drawing.Show(text).Text, Graphics.PointZero);
+            }
         }
 
         private static ScriptVariable GetVariable(ScriptState<object> scriptState, string name)

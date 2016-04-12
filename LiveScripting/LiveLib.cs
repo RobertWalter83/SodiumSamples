@@ -13,16 +13,6 @@ using WPFMedia = System.Windows.Media;
 
 namespace LiveScripting
 {
-    public static class Text
-    {
-        public static FormattedText FromString(string st)
-        {
-            return new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-                12d, Brushes.Black);
-        }
-    }
-
     public static class Setup
     {
         public static void RunVoid(Action setupAction)
@@ -38,21 +28,23 @@ namespace LiveScripting
 
     public static class Graphics
     {
-        public static WPFMedia.Drawing Collage(int width, int height, IEnumerable<dynamic> elements)
+        internal static readonly Point PointZero = new Point(0, 0);
+
+        public static Collage Collage(int w, int h, IEnumerable<dynamic> elements)
         {
-            DrawingGroup dg = new DrawingGroup();
+            Collage collage = new Collage {Width = w, Height = h};
             foreach (var element in elements)
             {
-                var drawing = Drawing.Show(element);
-                dg.Children.Add(drawing);
+                var eleNew = Drawing.Show(element);
+                collage.Add(eleNew);
             }
 
-            return dg;
+            return collage;
         }
 
         public static Rect Rect(double w, double h)
         {
-            return new Rect {Height = h, Width = w};
+            return new Rect { Height = h, Width = w };
         }
 
         public static Oval Oval(double w, double h)
@@ -65,49 +57,58 @@ namespace LiveScripting
             return new Image { Height = h, Width = w, Src = src };
         }
 
+        public static Text Text(string st)
+        {
+            return new Text {Text = LiveScripting.Text.FromString(st)};
+        }
+
         public static class Drawing
         {
-            private static readonly Point pointZero = new Point(0,0);
-
-            public static WPFMedia.Drawing Show(string st)
-            {
-                return Show(Text.FromString(st));
-            }
-
-            public static WPFMedia.Drawing Show(object obj)
+            public static Element Show(object obj)
             {
                 return Show("Don't know how to render this: " + obj);
             }
 
-            public static WPFMedia.Drawing Show(WPFMedia.Drawing drawing)
+            public static Element Show(Element ele)
             {
-                return drawing;
+                return ele;
             }
 
-            public static WPFMedia.Drawing Show(FormattedText text)
+            public static Element Show(string st)
             {
-                return new GeometryDrawing(Brushes.Black, null, text.BuildGeometry(pointZero));
+                return Show(Text(st));
             }
 
-            public static WPFMedia.Drawing Show(Rect rect)
+            public static Element Show(Text text)
             {
-                return DrawingFromGeometry(new RectangleGeometry(RectFromElem(rect)));
+                return text;
             }
 
-            public static WPFMedia.Drawing Show(Oval oval)
+            public static Element Show(Rect rect)
             {
-                return DrawingFromGeometry(new EllipseGeometry(RectFromElem(oval)));
+                var clone = rect.Clone<Rect>();
+                clone.Drawing = DrawingFromGeometry(new RectangleGeometry(RectFromElem(rect)));
+                return clone;
             }
 
-            public static WPFMedia.Drawing Show(Image image)
+            public static Element Show(Oval oval)
+            { 
+                var clone = oval.Clone<Oval>();
+                clone.Drawing = DrawingFromGeometry(new EllipseGeometry(RectFromElem(oval)));
+                return clone;
+            }
+
+            public static Element Show(Image image)
             {
-                return new ImageDrawing(new BitmapImage(new Uri(image.Src, UriKind.RelativeOrAbsolute)),
+                var clone = image.Clone<Image>();
+                clone.Drawing = new ImageDrawing(new BitmapImage(new Uri(image.Src, UriKind.RelativeOrAbsolute)),
                     RectFromElem(image));
+                return clone;
             }
 
             private static System.Windows.Rect RectFromElem(Element elem)
             {
-                return new System.Windows.Rect(pointZero, new Size(elem.Height, elem.Width));
+                return new System.Windows.Rect(PointZero, new Size(elem.Height, elem.Width));
             }
 
             private static WPFMedia.Drawing DrawingFromGeometry(Geometry geometry)
@@ -121,14 +122,151 @@ namespace LiveScripting
     {
         internal double Width { get; set; }
         internal double Height { get; set; }
+
+        internal Drawing Drawing { get; set; }
+
+        internal FormattedText Text { get; set; }
+
+        internal abstract void Draw(DrawingContext dc);
+        
+        protected virtual void CloneAction(Element clone)
+        {
+            clone.Width = Width;
+            clone.Height = Height;
+        }
+
+        internal T Clone<T>() where T : Element, new()
+        {
+            var t = new T();
+            CloneAction(t);
+            return t;
+        }
     }
 
-    public class Rect : Element { }
+    public class Rect : Element
+    {
+        internal new FormattedText Text
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set Text for Rect."); }
+        }
 
-    public class Oval : Element { }
+        internal override void Draw(DrawingContext dc)
+        {
+            dc.DrawDrawing(Drawing);
+        }
+
+        protected override void CloneAction(Element clone)
+        {
+            base.CloneAction(clone);
+            clone.Drawing = this.Drawing;
+        }
+    }
+
+    public class Oval : Element
+    {
+        internal new FormattedText Text
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set Text for Oval."); }
+        }
+
+        protected override void CloneAction(Element clone)
+        {
+            base.CloneAction(clone);
+            clone.Drawing = this.Drawing;
+        }
+
+        internal override void Draw(DrawingContext dc)
+        {
+            dc.DrawDrawing(Drawing);
+        }
+    }
 
     public class Image : Element
     {
         internal string Src { get; set; }
+
+        internal new FormattedText Text
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set Text for Image."); }
+        }
+
+        protected override void CloneAction(Element clone)
+        {
+            base.CloneAction(clone);
+            clone.Drawing = Drawing;
+            (clone as Image).Src = Src;
+        }
+
+        internal override void Draw(DrawingContext dc)
+        {
+            dc.DrawDrawing(Drawing);
+        }
+    }
+
+    public class Text : Element
+    {
+        public static FormattedText FromString(string st)
+        {
+            return new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
+                12d, Brushes.Black);
+        }
+
+        internal new Drawing Drawing
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set 'Drawing' for Text."); }
+        }
+
+        protected override void CloneAction(Element clone)
+        {
+            base.CloneAction(clone);
+            clone.Text = Text;
+        }
+
+        internal override void Draw(DrawingContext dc)
+        {
+            dc.DrawText(Text, Graphics.PointZero);
+        }
+    }
+
+    public class Collage : Element
+    {
+        internal readonly IList<Element> rgElement = new List<Element>();  
+
+        public void Add(Element ele)
+        {
+            rgElement.Add(ele);
+        }
+
+        internal new Drawing Drawing
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set 'Drawing' for Collage."); }
+        }
+
+        internal new FormattedText Text
+        {
+            get { return null; }
+            set { throw new InvalidOperationException("Cannot set 'Text' for Collage."); }
+        }
+
+        protected override void CloneAction(Element clone)
+        {
+            base.CloneAction(clone);
+            foreach (var element in rgElement)
+                (clone as Collage).Add(element);
+        }
+
+        internal override void Draw(DrawingContext dc)
+        {
+            dc.PushClip(new RectangleGeometry(new System.Windows.Rect(new Size(Width, Height))));
+            
+            foreach (var ele in rgElement)
+                ele.Draw(dc);
+        }
     }
 }
