@@ -35,7 +35,7 @@ namespace LiveScripting
                 cExecResult.Loop(sExecResult.Hold(ExecutionResult.Nil));
 
                 /**
-                 * look for a main variable that we can render if it holds a Drawing
+                 * look for a main variable that we can render if it holds a drawing
                  */
                 Cell<ScriptVariable> cMain =
                     cExecResult.Map(result => GetVariable(result.scriptState, "main"));
@@ -82,7 +82,7 @@ namespace LiveScripting
         {
             using (var dc = vh.Dv.RenderOpen())
             {
-                Graphics.Drawing.Show(text).Draw(dc);
+                Graphics.Text(text).Draw(dc);
             }
         }
 
