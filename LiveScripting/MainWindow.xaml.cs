@@ -38,29 +38,34 @@ namespace LiveScripting
                 Cell<ScriptVariable> cMain =
                     cExecResult.Map(result => GetVariable(result.scriptState, "main"));
 
-                cMain.Listen(main =>
-                {
-                    if (main == null)
-                    {
-                        DisplayTextResult("<nothing to render: no main variable found>");
-                        return;
-                    }
-
-                    var element = main.Value as Element;
-                    if (element == null)
-                    {
-                        DisplayTextResult("<nothing to render: main variable must be of type 'Element'");
-                        return;
-                    }
-
-                    using (var dc = vh.Dv.RenderOpen())
-                    {
-                        element.Draw(dc);
-                    }
-                });
-
+                cMain.Listen(HandleMain);
                 cExecResult.Listen(HandleError);
             });
+        }
+
+        private void HandleMain(ScriptVariable main)
+        {
+            if (main == null)
+            {
+                Draw(new Text("<nothing to render: no main variable found>"));
+                return;
+            }
+
+            var sElement = main.Value as Stream<Element>;
+            if (sElement != null)
+            {
+                sElement.Listen(Draw);
+                return;
+            }
+
+            var element = main.Value as Element;
+            if (element == null)
+            {
+                Draw(new Text("<nothing to render: main variable must be of type 'Element' or 'Stream<Element>'"));
+                return;
+            }
+
+            Draw(element);
         }
 
         private void HandleError(ExecutionResult executionResult)
@@ -76,11 +81,11 @@ namespace LiveScripting
             }
         }
 
-        private void DisplayTextResult(string text)
+        private void Draw(Element element)
         {
             using (var dc = vh.Dv.RenderOpen())
             {
-                Graphics.Text(text).Draw(dc);
+                element.Draw(dc);
             }
         }
 

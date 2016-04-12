@@ -117,7 +117,7 @@ namespace LiveScripting
                 new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
                 14d, Brushes.Black);
 
-            this.drawing = GroupFromDrawing(new GeometryDrawing(Brushes.Black, null,
+            drawing = GroupFromDrawing(new GeometryDrawing(Brushes.Black, null,
                         formattedText.BuildGeometry(Graphics.PointZero)));
         }
     }
@@ -132,7 +132,7 @@ namespace LiveScripting
 
         internal void Add(Drawing dr)
         {
-            this.drawing.Children.Add(dr);
+            drawing.Children.Add(dr);
         }
 
         internal override void Draw(DrawingContext dc)
