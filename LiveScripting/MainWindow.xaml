@@ -33,7 +33,9 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <TextBlock Name="lblError" Grid.Row="0" Foreground="Red"></TextBlock>
-            <local:VisualHost x:Name="vh" Grid.Row="1" />
+            <Canvas Name="cvsResult" Grid.Row="1" Background="White">
+                <local:VisualHost x:Name="vh" />
+            </Canvas>
         </Grid>
     </Grid>
 </Window>

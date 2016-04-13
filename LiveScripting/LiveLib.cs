@@ -1,22 +1,42 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Sodium;
 
 namespace LiveScripting
 {
+    public class Signal
+    {
+        public static Stream<MouseEventArgs> SMouse { get; internal set; }
+
+        static Point GetPoint(MouseEventArgs args)
+        {
+            return args.GetPosition(Graphics.Self);
+        }
+
+        public static Cell<Point> MousePos
+        {
+            get { return SMouse.Map(GetPoint).Hold(Graphics.PointZero); }
+        }
+    }
+
     public static class Graphics
     {
         internal static readonly Point PointZero = new Point(0, 0);
+        public static Canvas Self { get; internal set; }
 
         public static LiveScripting.Element Collage(int w, int h, params Drawing[] drawings)
         {
             DrawingGroup dg = new DrawingGroup {ClipGeometry = new RectangleGeometry(RectFromDim(w, h))};
             foreach (var drawing in drawings)
             {
+                if (drawing == null)
+                    continue;
                 dg.Children.Add(drawing);
             }
 
@@ -25,9 +45,14 @@ namespace LiveScripting
 
         public static class Element
         {
+            public static LiveScripting.Element Show<T>(T t)
+            {
+                return Text(ToString(t));
+            }
+
             public static LiveScripting.Element Show(object a)
             {
-                return Text(ToString(a));
+                return Show<object>(a);
             }
 
             private static string ToString(object a)
@@ -36,7 +61,7 @@ namespace LiveScripting
                     return a.ToString();
 
                 var arr = a as object[];
-                return arr == null ? "" : string.Join(",", arr.Select(ToString).ToArray());
+                return arr == null ? "" : string.Join(", ", arr.Select(ToString).ToArray());
             }
 
             public static LiveScripting.Element Image(int w, int h, string src)

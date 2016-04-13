@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -12,15 +12,24 @@ namespace LiveScripting
     public partial class MainWindow : Window
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
-        
+        Point GetPoint(MouseEventArgs args)
+        {
+            return args.GetPosition(cvsResult);
+        }
         public MainWindow()
         {
             InitializeComponent();
-           
+
+            Graphics.Self = cvsResult;
+
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
                 txtInput.Document.Changed += DocumentChangedHandler;
+
+                StreamSink<MouseEventArgs> sMouse = new StreamSink<MouseEventArgs>();
+                Graphics.Self.MouseMove += (sender, args) => sMouse.Send(args);
+                Signal.SMouse = sMouse;
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
@@ -28,7 +37,7 @@ namespace LiveScripting
                    context of cScriptState.
                  * the scriptState that gets updated (sExecResult) is initialized with Nil
                  */
-                Cell<ScriptState<object>> cScriptStart = Cell.Constant(SetupResultCanvas().Result);
+                Cell <ScriptState<object>> cScriptStart = Cell.Constant(SetupResultCanvas().Result);
                 CellLoop<ExecutionResult> cExecResult = new CellLoop<ExecutionResult>();
                 Stream<ExecutionResult> sExecResult = sDocChanged.Snapshot(cExecResult, cScriptStart, Execute);
                 cExecResult.Loop(sExecResult.Hold(ExecutionResult.Nil));
@@ -48,21 +57,21 @@ namespace LiveScripting
         {
             if (main == null)
             {
-                Draw(new Text("<nothing to render: no main variable found>"));
+                Draw(new Text("<nothing to render>\nno main variable found"));
                 return;
             }
 
-            var sElement = main.Value as Stream<Element>;
-            if (sElement != null)
+            var cElement = main.Value as Cell<Element>;
+            if (cElement != null)
             {
-                sElement.Listen(Draw);
+                cElement.Listen(Draw);
                 return;
             }
 
             var element = main.Value as Element;
             if (element == null)
             {
-                Draw(new Text("<nothing to render: main variable must be of type 'Element' or 'Stream<Element>'"));
+                Draw(new Text($"<nothing to render>\nmain variable must be of type 'Element' or 'Cell<Element>'\nis: {main.Value.GetType()}"));
                 return;
             }
 
@@ -114,9 +123,10 @@ namespace LiveScripting
                         @"using LiveScripting;
                           using System.Windows.Media;
                           
-                          using t = LiveScripting.Transform;
                           using g = LiveScripting.Graphics;
-                          using e = LiveScripting.Graphics.Element;",
+                          using e = LiveScripting.Graphics.Element;
+                          using t = LiveScripting.Transform;
+                          using s = LiveScripting.Signal;",
                         options);
 
             return scriptState;
