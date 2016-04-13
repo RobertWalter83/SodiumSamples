@@ -35,21 +35,8 @@ namespace LiveScripting
                 if (!a.GetType().IsArray)
                     return a.ToString();
 
-                StringBuilder sb = new StringBuilder();
-                sb.Append("[ ");
                 var arr = a as object[];
-                if (arr != null)
-                {
-                    for (int i = 0; i < arr.Length; i++)
-                    {
-                        sb.Append(ToString(arr[i]));
-                        
-                        if (i+1 != arr.Length)
-                            sb.Append(", ");
-                    }
-                }
-                sb.Append(" ]");
-                return sb.ToString();
+                return arr == null ? "" : string.Join(",", arr.Select(ToString).ToArray());
             }
 
             public static LiveScripting.Element Image(int w, int h, string src)
