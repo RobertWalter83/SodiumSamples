@@ -20,22 +20,22 @@
         <Label Grid.Row="0" Grid.Column="0" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">Type your C# script here</Label>
         <Label Grid.Row="0" Grid.Column="1" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
 
-        <avalonedit:TextEditor
+        <avalonedit:TextEditor 
             Grid.Row="1" Grid.Column="0"
             x:Name="txtInput"
             FontFamily="Consolas"
             SyntaxHighlighting="C#"
             FontSize="10pt"
             ShowLineNumbers="True"/>
-        <Grid Name="gridResult" Grid.Row="1" Grid.Column="1">
+        <Grid Name="gridResult" Grid.Row="1" Grid.Column="1" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <TextBlock Name="lblError" Grid.Row="0" Foreground="Red"></TextBlock>
-            <Canvas Name="cvsResult" Grid.Row="1" Background="White">
+            <local:SturdyCanvas x:Name="cvsResult" Grid.Row="1" Background="White" Focusable="True" OverridesDefaultStyle="True">
                 <local:VisualHost x:Name="vh" />
-            </Canvas>
+            </local:SturdyCanvas>
         </Grid>
     </Grid>
 </Window>

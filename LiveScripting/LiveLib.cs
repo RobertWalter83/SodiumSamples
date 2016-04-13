@@ -10,26 +10,23 @@ using Sodium;
 
 namespace LiveScripting
 {
-    public class Signal
+    public static class Mouse
     {
-        public static Stream<MouseEventArgs> SMouse { get; internal set; }
+        public static Cell<Point> MousePos { get; internal set; }
 
-        static Point GetPoint(MouseEventArgs args)
-        {
-            return args.GetPosition(Graphics.Self);
-        }
+        public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> MouseButtons
+        { get; internal set; }
+    }
 
-        public static Cell<Point> MousePos
-        {
-            get { return SMouse.Map(GetPoint).Hold(Graphics.PointZero); }
-        }
+    public static class Keyboard
+    {
+        public static Cell<Tuple<int, int>> Arrows { get; internal set; }
     }
 
     public static class Graphics
     {
         internal static readonly Point PointZero = new Point(0, 0);
-        public static Canvas Self { get; internal set; }
-
+        
         public static LiveScripting.Element Collage(int w, int h, params Drawing[] drawings)
         {
             DrawingGroup dg = new DrawingGroup {ClipGeometry = new RectangleGeometry(RectFromDim(w, h))};

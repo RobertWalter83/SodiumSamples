@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
@@ -12,24 +13,59 @@ namespace LiveScripting
     public partial class MainWindow : Window
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
-        Point GetPoint(MouseEventArgs args)
-        {
-            return args.GetPosition(cvsResult);
-        }
+        
         public MainWindow()
         {
             InitializeComponent();
-
-            Graphics.Self = cvsResult;
 
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
                 txtInput.Document.Changed += DocumentChangedHandler;
 
-                StreamSink<MouseEventArgs> sMouse = new StreamSink<MouseEventArgs>();
-                Graphics.Self.MouseMove += (sender, args) => sMouse.Send(args);
-                Signal.SMouse = sMouse;
+                StreamSink<MouseEventArgs> sMouseMove = new StreamSink<MouseEventArgs>();
+                cvsResult.MouseMove += (sender, args) => sMouseMove.Send(args);
+                Cell<SturdyCanvas> cCvs = Cell.Constant(cvsResult);
+                Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs)).Hold(Graphics.PointZero);
+
+                StreamSink<MouseEventArgs> sMouseButton = new StreamSink<MouseEventArgs>();
+                cvsResult.MouseDown += (sender, args) => sMouseButton.Send(args);
+                cvsResult.MouseUp += (sender, args) => sMouseButton.Send(args);
+                Mouse.MouseButtons =
+                    sMouseButton.Map(
+                        args =>
+                            new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
+                                args.LeftButton, args.MiddleButton, args.RightButton))
+                        .Hold(new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
+                            MouseButtonState.Released, MouseButtonState.Released, MouseButtonState.Released));
+
+                
+                Mouse.MouseButtons.Listen(tuple =>
+                {
+                    if (tuple.Item1 == MouseButtonState.Pressed ||
+                        tuple.Item2 == MouseButtonState.Pressed ||
+                        tuple.Item3 == MouseButtonState.Pressed)
+                        this.cvsResult.Focus();
+                });
+                
+
+                StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
+                cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
+                cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
+                Stream<KeyEventArgs> sUp = sKeys.Filter(args => args.Key == Key.Up);
+                Stream<KeyEventArgs> sDown = sKeys.Filter(args => args.Key == Key.Down);
+                Stream<KeyEventArgs> sLeft = sKeys.Filter(args => args.Key == Key.Left);
+                Stream<KeyEventArgs> sRight = sKeys.Filter(args => args.Key == Key.Right);
+
+                Cell<int> cYDec = sUp.Map(args => args.IsDown ? -1 : 0).Hold(0);
+                Cell<int> cYInc = sDown.Map(args => args.IsDown ? 1 : 0).Hold(0);
+                Cell<int> cY = cYDec.Lift(cYInc, (dec, inc) => dec + inc);
+
+                Cell<int> cXDec = sLeft.Map(args => args.IsDown ? -1 : 0).Hold(0);
+                Cell<int> cXInc = sRight.Map(args => args.IsDown ? 1 : 0).Hold(0);
+                Cell<int> cX = cXDec.Lift(cXInc, (dec, inc) => dec + inc);
+
+                Keyboard.Arrows = cX.Lift(cY, (x, y) => new Tuple<int, int>(x, y));
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
@@ -53,6 +89,7 @@ namespace LiveScripting
             });
         }
 
+       
         private void HandleMain(ScriptVariable main)
         {
             if (main == null)
@@ -126,7 +163,7 @@ namespace LiveScripting
                           using g = LiveScripting.Graphics;
                           using e = LiveScripting.Graphics.Element;
                           using t = LiveScripting.Transform;
-                          using s = LiveScripting.Signal;",
+                          using s = LiveScripting.Mouse;",
                         options);
 
             return scriptState;
