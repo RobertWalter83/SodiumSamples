@@ -10,48 +10,141 @@ namespace LiveScripting
     {
         internal static readonly Point PointZero = new Point(0, 0);
 
-        public static Collage Collage(int w, int h, params Element[] elements)
+        public static LiveScripting.Element Collage(int w, int h, params Drawing[] drawings)
         {
-            Collage collage = new Collage(w, h);
-            foreach (var element in elements)
+            DrawingGroup dg = new DrawingGroup {ClipGeometry = new RectangleGeometry(RectFromDim(w, h))};
+            foreach (var drawing in drawings)
             {
-                collage.Add(element.drawing);
+                dg.Children.Add(drawing);
             }
 
-            return collage;
+            return new LiveScripting.Element(dg);
         }
 
-        public static Rect Rect(double w, double h)
+        public static class Element
         {
-            return new Rect (h, w);
+            public static LiveScripting.Element Show(object a)
+            {
+                return Text(a.ToString());
+            }
+
+            public static LiveScripting.Element Image(int w, int h, string src)
+            {
+                return new Image(w, h, src);
+            }
+
+            public static LiveScripting.Element Text(string st)
+            {
+                return new Text(st);
+            }
         }
 
-        public static Oval Oval(double w, double h)
+        public static Shape Rect(double w, double h)
         {
-            return new Oval(h, w);
+            return new Rect(w, h);
         }
 
-        public static Image Image(int w, int h, string src)
+        public static Shape Oval(double w, double h)
         {
-            return new Image(h, w, src);
+            return new Oval(w, h);
         }
 
-        public static Text Text(string st)
+        public static Shape Square(double l)
         {
-            return new Text(st);
+            return Rect(l, l);
+        }
+
+        public static Shape Circle(double r)
+        {
+            return Oval(r, r);
+        } 
+
+        public static Drawing ToDrawing(Shape shape, Brush b, Pen p)
+        {
+            return shape.ToDrawing(b, p);
+        }
+
+        public static Drawing AsDrawing(LiveScripting.Element ele)
+        {
+            return ele.drawing.Clone();
+        }
+
+        internal static System.Windows.Rect RectFromDim(double w, double h)
+        {
+            return new System.Windows.Rect(PointZero, new Size(w, h));
         }
     }
 
-    public abstract class Element
+    public abstract class Shape
     {
         internal readonly double width;
         internal readonly double height;
-        internal DrawingGroup drawing;
 
-        protected Element(double w, double h) 
+        internal Shape(double w, double h)
         {
-            width = w;
+            width = w; 
             height = h;
+        }
+
+        internal DrawingGroup ToDrawing(Brush b, Pen p)
+        {
+            return GroupFromDrawing(DrawingFromGeometry(Geometry(), b, p));
+        }
+
+        internal abstract Geometry Geometry();
+
+        protected System.Windows.Rect Rect()
+        {
+            return new System.Windows.Rect(new Size(width, height));
+        }
+
+        private static DrawingGroup GroupFromDrawing(Drawing drawing)
+        {
+            DrawingGroup dg = new DrawingGroup();
+            dg.Children.Add(drawing);
+            return dg;
+        }
+
+        private static Drawing DrawingFromGeometry(Geometry g, Brush b = null, Pen p = null)
+        {
+            return new GeometryDrawing(b, p, g);
+        }
+    }
+
+    internal class Rect : Shape
+    {
+        internal Rect(double w, double h) : base(w, h)
+        {
+        }
+
+        internal override Geometry Geometry()
+        {
+            return new RectangleGeometry(Rect());
+        }
+    }
+
+    internal class Oval : Shape
+    {
+        internal Oval(double w, double h) : base(w, h)
+        {
+        }
+
+        internal override Geometry Geometry()
+        {
+            return new EllipseGeometry(Rect());
+        }
+    }
+
+    public class Element
+    {
+        internal Drawing drawing;
+
+        protected Element()
+        {}
+
+        internal Element(Drawing drawing)
+        {
+            this.drawing = drawing;
         }
 
         internal virtual void Draw(DrawingContext dc)
@@ -59,124 +152,79 @@ namespace LiveScripting
             dc.DrawDrawing(drawing);
         }
 
-        protected static DrawingGroup GroupFromDrawing(Drawing drawing)
+        internal static Drawing AsDrawingGroup(Drawing drawing)
         {
             DrawingGroup dg = new DrawingGroup();
             dg.Children.Add(drawing);
             return dg;
         }
-
-        protected static System.Windows.Rect RectFromDim(double w, double h)
-        {
-            return new System.Windows.Rect(Graphics.PointZero, new Size(h, w));
-        }
-
-        protected static Drawing DrawingFromGeometry(Geometry geometry)
-        {
-            return new GeometryDrawing(null, new Pen(Brushes.Black, 1d), geometry);
-        }
     }
 
-    public class Rect : Element
-    {
-        internal Rect(double w, double h) : base(w, h)
-        {
-            drawing = GroupFromDrawing(DrawingFromGeometry(new RectangleGeometry(RectFromDim(w,h))));
-        }
-    }
-
-    public class Oval : Element
-    {
-        internal Oval(double w, double h) : base(w, h)
-        {
-            drawing = GroupFromDrawing(DrawingFromGeometry(new EllipseGeometry(RectFromDim(w,h))));
-        }
-    }
-
-    public class Image : Element
+    internal class Image : Element
     {
         internal readonly string src;
 
-        internal Image(double w, double h, string src) : base(w, h)
+        internal Image(int w, int h, string src)
+            : base(AsDrawingGroup(new ImageDrawing(new BitmapImage(new Uri(src, UriKind.RelativeOrAbsolute)),
+                Graphics.RectFromDim(w, h))))
         {
             this.src = src;
-            drawing = GroupFromDrawing(new ImageDrawing(new BitmapImage(new Uri(src, UriKind.RelativeOrAbsolute)),
-                    RectFromDim(w, h)));
         }
     }
 
-    public class Text : Element
+    internal class Text : Element
     {
         internal FormattedText formattedText;
-
-        internal Text(string st) : this(0, 0, st) { }
-
-        internal Text(double w, double h, string st) : base(w, h)
+        
+        internal Text(string st)
         {
             formattedText = new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
                 new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
                 14d, Brushes.Black);
 
-            drawing = GroupFromDrawing(new GeometryDrawing(Brushes.Black, null,
+            drawing = AsDrawingGroup(new GeometryDrawing(Brushes.Black, null,
                         formattedText.BuildGeometry(Graphics.PointZero)));
-        }
-    }
-
-    public class Collage : Element
-    {
-        
-        internal Collage(double w, double h) : base(w,h) 
-        {
-            drawing = new DrawingGroup();
-        }
-
-        internal void Add(Drawing dr)
-        {
-            drawing.Children.Add(dr);
-        }
-
-        internal override void Draw(DrawingContext dc)
-        {
-            dc.PushClip(new RectangleGeometry(new System.Windows.Rect(new Size(width, height))));
-            base.Draw(dc);
         }
     }
 
     public static class Transform
     {
-        public static Element Scale(Element element, double sf)
+        public static Drawing Scale(Drawing drawing, double sf)
         {
-            return Scale(element, sf, sf);
+            return Scale(drawing, sf, sf);
         }
 
-        public static Element Scale(Element element, double sfX, double sfY)
+        public static Drawing Scale(Drawing drawing, double sfX, double sfY)
         {
-            if(element.drawing.Transform == null)
-                element.drawing.Transform = new TransformGroup();
-
-            (element.drawing.Transform as TransformGroup).Children.Add(new ScaleTransform(sfX, sfY));
-            
-            return element;
+            return ApplyTransform(drawing, new ScaleTransform(sfX, sfY));
         }
 
-        public static Element Rotate(Element element, double rd)
+        public static Drawing Rotate(Drawing drawing, double rd)
         {
-            if (element.drawing.Transform == null)
-                element.drawing.Transform = new TransformGroup();
-
-            (element.drawing.Transform as TransformGroup).Children.Add(new RotateTransform(rd));
-
-            return element;
+            return ApplyTransform(drawing, new RotateTransform(rd));
         }
 
-        public static Element Move(Element element, double x, double y)
+        public static Drawing Move(Drawing drawing, double x, double y)
         {
-            if (element.drawing.Transform == null)
-                element.drawing.Transform = new TransformGroup();
+            return ApplyTransform(drawing, new TranslateTransform(x, y));
+        }
 
-            (element.drawing.Transform as TransformGroup).Children.Add(new TranslateTransform(x, y));
+        private static Drawing ApplyTransform(Drawing drawing, System.Windows.Media.Transform t)
+        {
+            if (drawing == null)
+                return null;
 
-            return element;
+            if (!(drawing is DrawingGroup))
+                drawing = Element.AsDrawingGroup(drawing.Clone());
+
+            DrawingGroup dg = drawing as DrawingGroup;
+
+            if (dg.Transform == null)
+                dg.Transform = new TransformGroup();
+
+            (dg.Transform as TransformGroup).Children.Add(t);
+
+            return dg;
         }
     }
 }

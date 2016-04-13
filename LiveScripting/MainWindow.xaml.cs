@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
 using ICSharpCode.AvalonEdit.Document;
@@ -110,7 +111,12 @@ namespace LiveScripting
             var scriptState =
                 await
                     CSharpScript.RunAsync<object>(
-                        @"using LiveScripting;",
+                        @"using LiveScripting;
+                          using System.Windows.Media;
+                          
+                          using g = LiveScripting.Graphics;
+                          using e = LiveScripting.Graphics.Element;
+                          using t = LiveScripting.Transform;",
                         options);
 
             return scriptState;
