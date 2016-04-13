@@ -114,9 +114,9 @@ namespace LiveScripting
                         @"using LiveScripting;
                           using System.Windows.Media;
                           
+                          using t = LiveScripting.Transform;
                           using g = LiveScripting.Graphics;
-                          using e = LiveScripting.Graphics.Element;
-                          using t = LiveScripting.Transform;",
+                          using e = LiveScripting.Graphics.Element;",
                         options);
 
             return scriptState;
