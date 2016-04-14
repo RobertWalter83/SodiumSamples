@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -79,7 +78,7 @@ namespace LiveScripting
             public static LiveScripting.Element Container(int w, int h, Position p, LiveScripting.Element e)
             {
                 var shapeContainer = Rect(w, h);
-                var drawingContainer = ToDrawing(shapeContainer, Brushes.White, new Pen(Brushes.Black, 1));
+                var drawingContainer = ToDrawing(shapeContainer, Brushes.Transparent, null);
                 var drawingContent = AsDrawing(e);
                 return Collage(w, h, drawingContainer, TransformTo(w, h, p, drawingContent));
             }
@@ -194,6 +193,11 @@ namespace LiveScripting
         }
 
         internal abstract Geometry Geometry();
+
+        public Drawing DrawWith(Brush b, Pen p)
+        {
+            return Graphics.ToDrawing(this, b, p);
+        }
 
         protected System.Windows.Rect Rect()
         {
