@@ -10,6 +10,10 @@ using Sodium;
 
 namespace LiveScripting
 {
+    public static class Time
+    {
+        public static Stream<TimeSpan> Ticks { get; internal set; }
+    }
     public static class Mouse
     {
         public static Cell<Point> MousePos { get; internal set; }
@@ -21,6 +25,7 @@ namespace LiveScripting
     public static class Keyboard
     {
         public static Cell<Tuple<int, int>> Arrows { get; internal set; }
+        public static Cell<Tuple<int, int>> Wasd { get; internal set; }
     }
 
     public static class Graphics
@@ -69,6 +74,70 @@ namespace LiveScripting
             public static LiveScripting.Element Text(string st)
             {
                 return new Text(st);
+            }
+
+            public static LiveScripting.Element Container(int w, int h, Position p, LiveScripting.Element e)
+            {
+                var shapeContainer = Rect(w, h);
+                var drawingContainer = ToDrawing(shapeContainer, Brushes.White, new Pen(Brushes.Black, 1));
+                var drawingContent = AsDrawing(e);
+                return Collage(w, h, drawingContainer, TransformTo(w, h, p, drawingContent));
+            }
+
+            private static Drawing TransformTo(int w, int h, Position p, Drawing content)
+            {
+                double offsetX = 0;
+                double offsetY = 0;
+                double dx = w - content.Bounds.Width;
+                double dy = h - content.Bounds.Height;
+                switch (p)
+                {
+                    case Position.topLeft:
+                        break;
+                    case Position.topRight:
+                        offsetX = dx;
+                        break;
+                    case Position.middle:
+                        offsetX = dx/2;
+                        offsetY = dy/2;
+                        break;
+                    case Position.midTop:
+                        offsetX = dx/2;
+                        break;
+                    case Position.midBottom:
+                        offsetX = dx/2;
+                        offsetY = dy;
+                        break;
+                    case Position.midLeft:
+                        offsetY = dy/2;
+                        break;
+                    case Position.midRight:
+                        offsetX = dx;
+                        offsetY = dy/2;
+                        break;
+                    case Position.bottomLeft:
+                        offsetY = dy;
+                        break;
+                    case Position.bottomRight:
+                        offsetX = dx;
+                        offsetY = dy;
+                        break;
+
+                }
+                return Transform.Move(content, offsetX, offsetY);
+            }
+
+            public enum Position
+            {
+                middle,
+                midTop,
+                midBottom,
+                midLeft,
+                midRight,
+                topLeft,
+                topRight,
+                bottomLeft,
+                bottomRight
             }
         }
 

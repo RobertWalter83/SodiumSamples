@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -17,16 +18,24 @@ namespace LiveScripting
         public MainWindow()
         {
             InitializeComponent();
+            this.cvsResult.FocusVisualStyle = new Style();
 
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
                 txtInput.Document.Changed += DocumentChangedHandler;
 
+                StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
+                CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs)args);
+                Time.Ticks = sRenderEvents.Collect(TimeSpan.Zero,
+                    (re, t) => Tuple.Create(re.RenderingTime - t, re.RenderingTime));
+
                 StreamSink<MouseEventArgs> sMouseMove = new StreamSink<MouseEventArgs>();
                 cvsResult.MouseMove += (sender, args) => sMouseMove.Send(args);
                 Cell<SturdyCanvas> cCvs = Cell.Constant(cvsResult);
-                Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs)).Hold(Graphics.PointZero);
+
+                Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs))
+                    .Hold(Graphics.PointZero);
 
                 StreamSink<MouseEventArgs> sMouseButton = new StreamSink<MouseEventArgs>();
                 cvsResult.MouseDown += (sender, args) => sMouseButton.Send(args);
@@ -38,34 +47,15 @@ namespace LiveScripting
                                 args.LeftButton, args.MiddleButton, args.RightButton))
                         .Hold(new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
                             MouseButtonState.Released, MouseButtonState.Released, MouseButtonState.Released));
-
                 
-                Mouse.MouseButtons.Listen(tuple =>
-                {
-                    if (tuple.Item1 == MouseButtonState.Pressed ||
-                        tuple.Item2 == MouseButtonState.Pressed ||
-                        tuple.Item3 == MouseButtonState.Pressed)
-                        this.cvsResult.Focus();
-                });
-                
+                Mouse.MouseButtons.Listen(FocusResultArea);
 
                 StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
                 cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
-                Stream<KeyEventArgs> sUp = sKeys.Filter(args => args.Key == Key.Up);
-                Stream<KeyEventArgs> sDown = sKeys.Filter(args => args.Key == Key.Down);
-                Stream<KeyEventArgs> sLeft = sKeys.Filter(args => args.Key == Key.Left);
-                Stream<KeyEventArgs> sRight = sKeys.Filter(args => args.Key == Key.Right);
-
-                Cell<int> cYDec = sUp.Map(args => args.IsDown ? -1 : 0).Hold(0);
-                Cell<int> cYInc = sDown.Map(args => args.IsDown ? 1 : 0).Hold(0);
-                Cell<int> cY = cYDec.Lift(cYInc, (dec, inc) => dec + inc);
-
-                Cell<int> cXDec = sLeft.Map(args => args.IsDown ? -1 : 0).Hold(0);
-                Cell<int> cXInc = sRight.Map(args => args.IsDown ? 1 : 0).Hold(0);
-                Cell<int> cX = cXDec.Lift(cXInc, (dec, inc) => dec + inc);
-
-                Keyboard.Arrows = cX.Lift(cY, (x, y) => new Tuple<int, int>(x, y));
+                
+                Keyboard.Arrows = CellDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
+                Keyboard.Wasd = CellDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
@@ -89,7 +79,35 @@ namespace LiveScripting
             });
         }
 
-       
+        private static Cell<Tuple<int, int>> CellDirKeys(Stream<KeyEventArgs> sKeys, Key keyUp, Key keyRight, Key keyDown, Key keyLeft)
+        {
+            Stream<KeyEventArgs> sUp = sKeys.Filter(args => args.Key == keyUp);
+            Stream<KeyEventArgs> sDown = sKeys.Filter(args => args.Key == keyDown);
+            Stream<KeyEventArgs> sLeft = sKeys.Filter(args => args.Key == keyLeft);
+            Stream<KeyEventArgs> sRight = sKeys.Filter(args => args.Key == keyRight);
+
+            Cell<int> cX = CellDir(sLeft, sRight);
+            Cell<int> cY = CellDir(sUp, sDown);
+
+            return cX.Lift(cY, (x, y) => new Tuple<int, int>(x, y));
+        } 
+
+        private static Cell<int> CellDir(Stream<KeyEventArgs> sNeg, Stream<KeyEventArgs> sPos)
+        {
+            Cell<int> cDec = sNeg.Map(args => args.IsDown ? -1 : 0).Calm().Hold(0);
+            Cell<int> cInc = sPos.Map(args => args.IsDown ? 1 : 0).Calm().Hold(0);
+            return cDec.Lift(cInc, (dec, inc) => dec + inc);
+        }
+
+        private void FocusResultArea(Tuple<MouseButtonState, MouseButtonState, MouseButtonState> tuple)
+        {
+            if (tuple.Item1 == MouseButtonState.Pressed ||
+                tuple.Item2 == MouseButtonState.Pressed ||
+                tuple.Item3 == MouseButtonState.Pressed)
+                this.cvsResult.Focus();
+        }
+
+
         private void HandleMain(ScriptVariable main)
         {
             if (main == null)
@@ -158,12 +176,15 @@ namespace LiveScripting
                 await
                     CSharpScript.RunAsync<object>(
                         @"using LiveScripting;
+                          using Sodium;
+                          using System.Windows;
                           using System.Windows.Media;
                           
                           using g = LiveScripting.Graphics;
                           using e = LiveScripting.Graphics.Element;
                           using t = LiveScripting.Transform;
-                          using s = LiveScripting.Mouse;",
+                          using m = LiveScripting.Mouse;
+                          using k = LiveScripting.Keyboard;",
                         options);
 
             return scriptState;
