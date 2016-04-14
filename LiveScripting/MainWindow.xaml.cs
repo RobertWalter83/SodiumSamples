@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -10,7 +11,7 @@ using Sodium;
 
 namespace LiveScripting
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow 
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
         
@@ -18,11 +19,15 @@ namespace LiveScripting
         {
             InitializeComponent();
             this.cvsResult.FocusVisualStyle = new Style();
-
+            
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
                 txtInput.Document.Changed += DocumentChangedHandler;
+
+                StreamSink<SizeChangedEventArgs> sSize = new StreamSink<SizeChangedEventArgs>();
+                cvsResult.SizeChanged += (sender, args) => sSize.Send(args);
+                Screen.Size = sSize.Accum(new Size(0, 0), (args, size) => args.NewSize);
 
                 StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
                 CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs)args);
@@ -75,6 +80,22 @@ namespace LiveScripting
 
                 cMain.Listen(HandleMain);
                 cExecResult.Listen(HandleError);
+            });
+
+            Transaction.RunVoid(() =>
+            {
+                StreamSink<KeyEventArgs> sKeysInput = new StreamSink<KeyEventArgs>();
+                this.txtInput.KeyDown += (sender, args) => sKeysInput.Send(args);
+                Stream<Unit> sSaveCommand = sKeysInput.Filter(args => args.IsDown && args.Key == Key.S &&
+                                                       (System.Windows.Input.Keyboard.IsKeyDown(Key.LeftCtrl) ||
+                                                        System.Windows.Input.Keyboard.IsKeyDown(Key.RightCtrl))).Map(_ => Unit.Value);
+
+                sSaveCommand.Listen(_ =>
+                {
+                    FileStream fs = new FileStream(@"C:\Users\Robert\Desktop\tmp.cs", FileMode.Create);
+                    this.txtInput.Save(fs);
+                    fs.Close();    
+                });
             });
         }
 
@@ -178,6 +199,7 @@ namespace LiveScripting
                           using Sodium;
                           using System.Windows;
                           using System.Windows.Media;
+                          using System.Collections.Generic;
                           
                           using g = LiveScripting.Graphics;
                           using e = LiveScripting.Graphics.Element;

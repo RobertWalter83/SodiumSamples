@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -25,6 +26,11 @@ namespace LiveScripting
     {
         public static Cell<Tuple<int, int>> Arrows { get; internal set; }
         public static Cell<Tuple<int, int>> Wasd { get; internal set; }
+    }
+
+    public static class Screen
+    {
+        public static Cell<Size> Size { get; internal set; }
     }
 
     public static class Graphics
@@ -158,11 +164,19 @@ namespace LiveScripting
         public static Shape Circle(double r)
         {
             return Oval(r, r);
-        } 
+        }
+
+        public static Shape Path(IEnumerable<Point> points)
+        {
+            var path = new Path(0, 0);
+            foreach (var p in points)
+                path.Add(p);
+            return path;
+        }
 
         public static Drawing ToDrawing(Shape shape, Brush b, Pen p)
         {
-            return shape.ToDrawing(b, p);
+            return shape.DrawWith(b, p);
         }
 
         public static Drawing AsDrawing(LiveScripting.Element ele)
@@ -187,17 +201,17 @@ namespace LiveScripting
             height = h;
         }
 
-        internal DrawingGroup ToDrawing(Brush b, Pen p)
+        public DrawingGroup DrawWith(Brush b, Pen p)
         {
-            return GroupFromDrawing(DrawingFromGeometry(Geometry(), b, p));
+            return GroupFromDrawing(DrawingFromGeometry(GeometryForDrawing(), b, p));
+        }
+
+        internal virtual Geometry GeometryForDrawing()
+        {
+            return Geometry();
         }
 
         internal abstract Geometry Geometry();
-
-        public Drawing DrawWith(Brush b, Pen p)
-        {
-            return Graphics.ToDrawing(this, b, p);
-        }
 
         protected System.Windows.Rect Rect()
         {
@@ -238,6 +252,36 @@ namespace LiveScripting
         internal override Geometry Geometry()
         {
             return new EllipseGeometry(Rect());
+        }
+    }
+
+    internal class Path : Shape
+    {
+        internal readonly PathFigure pathFigure;
+        private static readonly Point pointNaN = new Point(double.NaN, double.NaN);
+        public Path(double w, double h) : base(w, h)
+        {
+            pathFigure = new PathFigure(pointNaN, new List<PathSegment>(), false);
+        }
+
+        internal void Add(Point p)
+        {
+            if (pathFigure.StartPoint.Equals(pointNaN))
+                pathFigure.StartPoint = p;
+            else
+                pathFigure.Segments.Add(new LineSegment(p, false));
+        }
+
+        internal override Geometry GeometryForDrawing()
+        {
+            foreach (var segment in pathFigure.Segments)
+                segment.IsStroked = true;
+            return base.GeometryForDrawing();
+        }
+
+        internal override Geometry Geometry()
+        {
+            return new PathGeometry(new [] {pathFigure});
         }
     }
 
