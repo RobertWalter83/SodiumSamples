@@ -11,15 +11,16 @@ using Sodium;
 
 namespace LiveScripting
 {
-    public partial class MainWindow 
+    public partial class MainWindow
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
+        private static readonly string saveTarget = $"{System.AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
         
         public MainWindow()
         {
             InitializeComponent();
             this.cvsResult.FocusVisualStyle = new Style();
-            
+
             Transaction.RunVoid(() =>
             {
                 // register a handler for document changes; sends new document text to StreamSink sDocChanged 
@@ -30,7 +31,7 @@ namespace LiveScripting
                 Screen.Size = sSize.Accum(new Size(0, 0), (args, size) => args.NewSize);
 
                 StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
-                CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs)args);
+                CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs) args);
                 Time.Ticks = sRenderEvents.Collect(TimeSpan.Zero,
                     (re, t) => Tuple.Create(re.RenderingTime - t, re.RenderingTime));
 
@@ -51,13 +52,13 @@ namespace LiveScripting
                                 args.LeftButton, args.MiddleButton, args.RightButton))
                         .Hold(new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
                             MouseButtonState.Released, MouseButtonState.Released, MouseButtonState.Released));
-                
+
                 Mouse.MouseButtons.Listen(FocusResultArea);
 
                 StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
                 cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
-                
+
                 Keyboard.Arrows = CellDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
                 Keyboard.Wasd = CellDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
 
@@ -67,7 +68,7 @@ namespace LiveScripting
                    context of cScriptState.
                  * the scriptState that gets updated (sExecResult) is initialized with Nil
                  */
-                Cell <ScriptState<object>> cScriptStart = Cell.Constant(SetupResultCanvas().Result);
+                Cell<ScriptState<object>> cScriptStart = Cell.Constant(SetupResultCanvas().Result);
                 CellLoop<ExecutionResult> cExecResult = new CellLoop<ExecutionResult>();
                 Stream<ExecutionResult> sExecResult = sDocChanged.Snapshot(cExecResult, cScriptStart, Execute);
                 cExecResult.Loop(sExecResult.Hold(ExecutionResult.Nil));
@@ -87,14 +88,16 @@ namespace LiveScripting
                 StreamSink<KeyEventArgs> sKeysInput = new StreamSink<KeyEventArgs>();
                 this.txtInput.KeyDown += (sender, args) => sKeysInput.Send(args);
                 Stream<Unit> sSaveCommand = sKeysInput.Filter(args => args.IsDown && args.Key == Key.S &&
-                                                       (System.Windows.Input.Keyboard.IsKeyDown(Key.LeftCtrl) ||
-                                                        System.Windows.Input.Keyboard.IsKeyDown(Key.RightCtrl))).Map(_ => Unit.Value);
+                                                                      (System.Windows.Input.Keyboard.IsKeyDown(
+                                                                          Key.LeftCtrl) ||
+                                                                       System.Windows.Input.Keyboard.IsKeyDown(
+                                                                           Key.RightCtrl))).Map(_ => Unit.Value);
 
                 sSaveCommand.Listen(_ =>
                 {
-                    FileStream fs = new FileStream(@"C:\Users\Robert\Desktop\tmp.cs", FileMode.Create);
+                    FileStream fs = new FileStream(saveTarget, FileMode.Create);
                     this.txtInput.Save(fs);
-                    fs.Close();    
+                    fs.Close();
                 });
             });
         }
