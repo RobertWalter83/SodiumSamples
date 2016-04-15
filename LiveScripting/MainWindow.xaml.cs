@@ -26,7 +26,7 @@ namespace LiveScripting
                 txtInput.Document.Changed += DocumentChangedHandler;
 
                 StreamSink<SizeChangedEventArgs> sSize = new StreamSink<SizeChangedEventArgs>();
-                cvsResult.SizeChanged += (sender, args) => sSize.Send(args);
+                gridResult.SizeChanged += (sender, args) => sSize.Send(args);
                 Screen.Size = sSize.Accum(new Size(0, 0), (args, size) => args.NewSize);
 
                 StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
