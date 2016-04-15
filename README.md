@@ -43,7 +43,7 @@ var main =
 -> Change the string and see the effect :)
 
 
-### 2. Show an Image (make sure there is the file "problem1.png" in the root directory of the application)
+### 2. Show an image (make sure there is the file "problem1.png" in the root directory of the application)
 ```csharp
 Element Image() 
 {
@@ -80,7 +80,7 @@ var main = Annotated(Image());
 -> again, you can change the scripts and see the effects immediately
 
 
-### 4. Draw a House
+### 4. Draw a house
 ```csharp
  List<Point> Triangle() 
 {
