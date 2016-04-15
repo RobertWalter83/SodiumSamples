@@ -40,8 +40,21 @@ using k = LiveScripting.Keyboard;
 var main = 
     e.Show("Hello World"); 
 ```
--> Change the string and see the effect :)
+- Change the string and see the effect :)
+- in general, edit the examples and see what happens in the result area
+- Show is, like in Elm, a sort of "ToString()". You can pass whatever, and it will convert it in a string and display it. It is a tiny bit more sophisticated when it comes to arrays, though. See next example.
 
+### 1.5 Show arrays
+```csharp
+var main =
+	e.Show(
+		new object[] 
+		{
+			new [] {1,2,3,4},
+			new [] {"h", "e", "l", "l", "o" }
+		}
+	);
+```
 
 ### 2. Show an image (make sure there is the file "problem1.png" in the root directory of the application)
 ```csharp
@@ -52,7 +65,7 @@ Element Image()
 
 var main = Image();
 ```
--> Fiddle around with the numbers to see their pupose
+- Fiddle around with the numbers to see their pupose
 
 
 ### 3. Add some annotations to example 2.
@@ -77,7 +90,7 @@ Element Image()
 
 var main = Annotated(Image());
 ```
--> again, you can change the scripts and see the effects immediately
+- again, you can change the scripts and see the effects immediately
 
 
 ### 4. Draw a house
@@ -112,7 +125,7 @@ var main = House();
 var main =
 	m.MousePos.Map(e.Show);
 ```
--> Move your mouse over the result view (right half)
+- Move your mouse over the result view (right half)
 
 
 ### 6. Keyboard state
@@ -120,8 +133,9 @@ var main =
 var main =
 	k.Arrows.Map(e.Show);
 ```
--> Set focus into the result area and press the arrow keys
--> Replace the "Arrows" by "Wasd"
+- Set focus into the result area and press the arrow keys
+- Replace the "Arrows" by "Wasd"
+
 There is a known issue where the text editor sometimes doesn't show a caret anymore once you switched focus. If that happens, you have to restart.
 
  
