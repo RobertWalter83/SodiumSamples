@@ -316,9 +316,13 @@ namespace LiveScripting
         internal readonly string src;
 
         internal Image(int w, int h, string src)
-            : base(AsDrawingGroup(new ImageDrawing(new BitmapImage(new Uri(src, UriKind.RelativeOrAbsolute)),
-                Graphics.RectFromDim(w, h))))
         {
+            if(System.IO.File.Exists(src))
+                drawing = AsDrawingGroup(new ImageDrawing(new BitmapImage(new Uri(src, UriKind.RelativeOrAbsolute)),
+                    Graphics.RectFromDim(w, h)));
+            else
+                drawing = AsDrawingGroup(Graphics.AsDrawing(Graphics.Element.Text($"File '{src}' not found.")));
+
             this.src = src;
         }
     }
