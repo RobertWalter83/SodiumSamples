@@ -26,13 +26,21 @@ Yet, this project isn't close to the capabilities of its inspirations, it might 
 The contract is that the C# script in the app contains a "main" variable that is of type "LiveScripting.Element" or "Cell<LiveScripting.Element>", in order to see something in the result area.
 To get started, here are some scripts you can try out. Let me know if they don't work.
 
+Notice the following aliases to access the static API:
+```csharp
+using g = LiveScripting.Graphics;
+using e = LiveScripting.Graphics.Element;
+using t = LiveScripting.Transform;
+using m = LiveScripting.Mouse;
+using k = LiveScripting.Keyboard;
+```
+
 ### 1. Hello World
 ```csharp
 var main = 
     e.Show("Hello World"); 
 ```
 -> Change the string and see the effect :)
-
 
 
 ### 2. Show an Image (make sure there is the file "problem1.png" in the root directory of the application)
@@ -72,7 +80,6 @@ var main = Annotated(Image());
 -> again, you can change the scripts and see the effects immediately
 
 
-
 ### 4. Draw a House
 ```csharp
  List<Point> Triangle() 
@@ -100,26 +107,22 @@ Element House()
 var main = House();
 ```
 
-
 ### 5. Get mouse position (reactive, yay!)
 ```csharp
 var main =
-	Mouse.MousePos.Map(e.Show);
+	m.MousePos.Map(e.Show);
 ```
 -> Move your mouse over the result view (right half)
 
 
-
-
-6. Keyboard state
+### 6. Keyboard state
 ```csharp
 var main =
-	Keyboard.Arrows.Map(e.Show);
+	k.Arrows.Map(e.Show);
 ```
 -> Set focus into the result area and press the arrow keys
 -> Replace the "Arrows" by "Wasd"
 There is a known issue where the text editor sometimes doesn't show a caret anymore once you switched focus. If that happens, you have to restart.
-
 
  
 
