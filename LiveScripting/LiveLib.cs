@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -66,9 +67,9 @@ namespace LiveScripting
             {
                 if (!a.GetType().IsArray)
                     return a.ToString();
-
-                var arr = a as object[];
-                return arr == null ? "" : string.Join(", ", arr.Select(ToString).ToArray());
+                
+                var en = a as IEnumerable;
+                return $"[ {string.Join(", ", (from object element in en select ToString(element)).ToArray())} ]";
             }
 
             public static LiveScripting.Element Image(int w, int h, string src)
