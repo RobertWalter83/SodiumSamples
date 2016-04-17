@@ -140,6 +140,54 @@ var main =
 
 There is a known issue where the text editor sometimes doesn't show a caret anymore once you switched focus. If that happens, you have to restart.
 
- 
+### 7. Move a Drawing
+```csharp
+var orangePen = new Pen(Brushes.Orange, 4d);
+	
+var mouthCircle = g.ToDrawing(g.Circle(50), null, orangePen);
+var mask = g.ToDrawing(g.Rect(60,40), Brushes.White, null);
+// mouth is a Collage made of a circle and a 'mask' that hides a portion of the arc
+var mouth = g.AsDrawing(g.Collage(100, 100, mouthCircle, t.Move(mask, -3, -3)));
 
+var head = g.ToDrawing(g.Circle(100), null, orangePen);
+
+// a function here to easily create two eyes
+Drawing Eye()
+{
+	return g.Oval(17,10).DrawWith(Brushes.Orange, null);
+}
+
+// face combines the drawings and moves them to the right position
+var face = g.Collage(400, 300,
+				t.Move(mouth, 30, 40),
+				t.Move(head, 5, 5),
+				t.Move(Eye(), 20, 40),
+				t.Move(Eye(), 70, 40));
+
+// move the 'face' to the current point
+Element View(Point point) 
+{
+	return g.Collage(400, 300,
+		t.Move(g.AsDrawing(face), point.X, point.Y));
+}
+
+// an input stream: over time, we 'snapshot' the arrow key state
+Stream<Tuple<int, int>> StreamInput()
+{
+	return Time.Ticks.Snapshot(
+		Keyboard.Arrows, (dt, arrows) => arrows);  
+}
+
+// update the current point with current input state
+Point NewPoint(Tuple<int, int> input, Point pointOld)
+{
+	return new Point(pointOld.X + input.Item1, pointOld.Y + input.Item2);
+}
+
+var main = 
+	StreamInput().Accum(new Point(0, 0), NewPoint).Map(View);
+```
+- Set focus in the result area and hold arrow keys to move face
+
+#######
 Over time, more elaborated examples might follow.
