@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:LiveScripting"
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="Live Scripting C# with Avalon Editor" Height="550" Width="825">
+        Title="Live Scripting C# with Avalon Editor" Height="550" Width="825" KeyboardNavigation.DirectionalNavigation="Once">
     <Grid Name="gridMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
@@ -20,22 +20,25 @@
         <Label Grid.Row="0" Grid.Column="0" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">Type your C# script here</Label>
         <Label Grid.Row="0" Grid.Column="1" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
 
+        <Grid Name="gridEdit" Grid.Row="1" Grid.Column="0" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
         <avalonedit:TextEditor 
-            Grid.Row="1" Grid.Column="0"
+            Grid.Row="0" Grid.Column="0"
             x:Name="txtInput"
             FontFamily="Consolas"
             SyntaxHighlighting="C#"
             FontSize="9pt"
             ShowLineNumbers="True"/>
+        <TextBlock Name="lblError" Grid.Row="1" Foreground="Red" TextWrapping="Wrap"/>
+        </Grid>
         <Grid Name="gridResult" Grid.Row="1" Grid.Column="1" >
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <TextBlock Name="lblError" Grid.Row="0" Foreground="Red" TextWrapping="Wrap"/>
-            <local:SturdyCanvas x:Name="cvsResult" Grid.Row="1" Background="White" Focusable="True" OverridesDefaultStyle="True">
+            <Canvas x:Name="cvsResult" Background="White" Focusable="True" OverridesDefaultStyle="True">
                 <local:VisualHost x:Name="vh" />
-            </local:SturdyCanvas>
+            </Canvas>
         </Grid>
     </Grid>
 </Window>

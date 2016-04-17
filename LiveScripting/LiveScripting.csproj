@@ -102,7 +102,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="LiveLib.cs" />
-    <Compile Include="SturdyCanvas.cs" />
     <Compile Include="VisualHost.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

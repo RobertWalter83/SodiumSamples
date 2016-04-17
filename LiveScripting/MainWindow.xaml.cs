@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
@@ -15,10 +17,13 @@ namespace LiveScripting
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
         private static readonly string saveTarget = $"{System.AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
+        private static List<IListener> rglisteners = new List<IListener>();
         
         public MainWindow()
         {
             InitializeComponent();
+
+            
             this.cvsResult.FocusVisualStyle = new Style();
 
             Transaction.RunVoid(() =>
@@ -37,7 +42,7 @@ namespace LiveScripting
 
                 StreamSink<MouseEventArgs> sMouseMove = new StreamSink<MouseEventArgs>();
                 cvsResult.MouseMove += (sender, args) => sMouseMove.Send(args);
-                Cell<SturdyCanvas> cCvs = Cell.Constant(cvsResult);
+                Cell<Canvas> cCvs = Cell.Constant(cvsResult);
 
                 Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs))
                     .Hold(Graphics.PointZero);
@@ -133,23 +138,36 @@ namespace LiveScripting
 
         private void HandleMain(ScriptVariable main)
         {
+            
             if (main == null)
             {
                 Draw(new Text("<nothing to render>\nno main variable found"));
                 return;
             }
 
-            var cElement = main.Value as Cell<Element>;
-            if (cElement != null)
+            rglisteners.ForEach(l => l.Unlisten());
+
+            if (main.Type == typeof (Cell<Element>))
             {
-                cElement.Listen(Draw);
+                var cElement = main.Value as Cell<Element>;
+                if (cElement == null)
+                {
+                    Draw(new Text("<nothing to render>\nmain variable is of type 'Cell<Element>' but has no value.\nMake sure the value you assign is declared before the main variable!"));
+                    return;
+                }
+                rglisteners.Add(cElement.Listen(Draw));
                 return;
             }
 
+            if (main.Type != typeof(Element))
+            {
+                Draw(new Text($"<nothing to render>\nmain variable must be of type 'Element' or 'Cell<Element>'\nis: {main.Value?.GetType()}"));
+                return;
+            }
             var element = main.Value as Element;
             if (element == null)
             {
-                Draw(new Text($"<nothing to render>\nmain variable must be of type 'Element' or 'Cell<Element>'\nis: {main.Value.GetType()}"));
+                Draw(new Text("<nothing to render>\nmain variable is of type 'Element' but has no value.\nMake sure the value you assign is declared before the main variable!"));
                 return;
             }
 
@@ -200,6 +218,7 @@ namespace LiveScripting
                     CSharpScript.RunAsync<object>(
                         @"using LiveScripting;
                           using Sodium;
+                          using System;
                           using System.Windows;
                           using System.Windows.Media;
                           using System.Collections.Generic;
