@@ -20,8 +20,10 @@ You can get this packages installed via NuGet:
 - [CSharp.Scripting (used version: 1.2.1)](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting).
 - [AvalonEdit (used version: 5.0.3.0)](https://www.nuget.org/packages/AvalonEdit)
 
-This is a work-in-progress live scripting application, heavily inspired by Bret Victors talk on [Inventing on Principle](https://www.youtube.com/watch?v=EGqwXt90ZqA), and the Elm language API.
+This is a work-in-progress live scripting application, heavily inspired by Bret Victor's talk on [Inventing on Principle](https://www.youtube.com/watch?v=EGqwXt90ZqA), and the Elm language API.
 Yet, this project isn't close to the capabilities of its inspirations, it might still be fun for some people. 
+
+You might want to check out some screen casts showing [basic examples](https://www.youtube.com/watch?v=i9X3h6P1S68&list=PLqDDIFifPR4X7wi_gOcBbSZp2sdZgfIwy).
 
 The contract is that the C# script in the app contains a "main" variable that is of type "LiveScripting.Element" or "Cell<LiveScripting.Element>", in order to see something in the result area.
 To get started, here are some scripts you can try out. Let me know if they don't work.
@@ -51,7 +53,7 @@ var main =
 		new object[] 
 		{
 			new [] {1,2,3,4},
-			new [] {"h", "e", "l", "l", "o" }
+			new [] {'h', 'e', 'l', 'l', 'o' }
 		}
 	);
 ```
