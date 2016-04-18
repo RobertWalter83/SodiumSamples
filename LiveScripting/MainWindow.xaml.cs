@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Text;
 using Sodium;
+using TextChange = Microsoft.CodeAnalysis.Text.TextChange;
 
 namespace LiveScripting
 {
@@ -18,7 +25,21 @@ namespace LiveScripting
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
         private static readonly string saveTarget = $"{System.AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
         private static List<IListener> rglisteners = new List<IListener>();
-        
+
+        private const string stStartScript = @"using LiveScripting;
+                          using Sodium;
+                          using System;
+                          using System.Windows;
+                          using System.Windows.Media;
+                          using System.Collections.Generic;
+                          
+                          using b = LiveScripting.Basic;
+                          using g = LiveScripting.Graphics;
+                          using e = LiveScripting.Graphics.Element;
+                          using t = LiveScripting.Transform;
+                          using m = LiveScripting.Mouse;
+                          using k = LiveScripting.Keyboard;";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -146,7 +167,7 @@ namespace LiveScripting
             }
 
             rglisteners.ForEach(l => l.Unlisten());
-
+            rglisteners.Clear();
             if (main.Type == typeof (Cell<Element>))
             {
                 var cElement = main.Value as Cell<Element>;
@@ -216,18 +237,7 @@ namespace LiveScripting
             var scriptState =
                 await
                     CSharpScript.RunAsync<object>(
-                        @"using LiveScripting;
-                          using Sodium;
-                          using System;
-                          using System.Windows;
-                          using System.Windows.Media;
-                          using System.Collections.Generic;
-                          
-                          using g = LiveScripting.Graphics;
-                          using e = LiveScripting.Graphics.Element;
-                          using t = LiveScripting.Transform;
-                          using m = LiveScripting.Mouse;
-                          using k = LiveScripting.Keyboard;",
+                        stStartScript,
                         options);
 
             return scriptState;
