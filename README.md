@@ -16,7 +16,7 @@ Also, the user [Ziriax](https://github.com/Ziriax) made a significant contributi
 ## LiveScripting
 
 This project uses the C# Scripting package of the [.NET Compiler Platform (a.k.a Roslyn)](https://github.com/dotnet/roslyn), Sodium, and the [AvalonEdit package](https://github.com/icsharpcode/AvalonEdit). 
-You can get this packages installed via NuGet:
+You can get these packages installed via NuGet:
 - [CSharp.Scripting (used version: 1.2.1)](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting).
 - [AvalonEdit (used version: 5.0.3.0)](https://www.nuget.org/packages/AvalonEdit)
 
