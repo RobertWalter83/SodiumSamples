@@ -41,6 +41,8 @@ namespace LiveScripting
     {
         public static Cell<Tuple<int, int>> Arrows { get; internal set; }
         public static Cell<Tuple<int, int>> Wasd { get; internal set; }
+
+        public static Cell<bool> Space { get; internal set; }
     }
 
     public static class Screen
@@ -341,18 +343,155 @@ namespace LiveScripting
         }
     }
 
-    internal class Text : Element
+    public class Text : Element
     {
-        internal FormattedText formattedText;
-        
-        internal Text(string st)
-        {
-            formattedText = new FormattedText(st, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                new Typeface(new FontFamily("Consolas"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-                14d, Brushes.Black);
+        internal readonly FormattedText formattedText;
+        internal readonly Brush foreground;
+        internal readonly CultureInfo culture;
+        internal readonly FlowDirection flow;
+        internal readonly FontFamily fontFamily;
+        internal readonly FontStyle fontStyle;
+        internal readonly FontWeight fontWeight;
+        internal readonly FontStretch fontStretch;
+        internal readonly double size;
 
-            drawing = AsDrawingGroup(new GeometryDrawing(Brushes.Black, null,
-                        formattedText.BuildGeometry(Graphics.PointZero)));
+        private static readonly Brush foregroundDefault = Brushes.Black;
+
+        private FormattedText FormattedText(string st)
+        {
+            return new FormattedText(st, culture, flow,
+                new Typeface(fontFamily, fontStyle, fontWeight, fontStretch),
+                size, foregroundDefault);
+        }
+
+        public static Text FromString(string st)
+        {
+            return new Text(st);
+        }
+
+        public static Text Foreground(Text text, Brush foreground)
+        {
+            return new Text(text, foreground);
+        }
+
+        public static Text Bold(Text text)
+        {
+            return new Text(text, FontWeights.Bold);
+        }
+
+        public static Text Size(Text text, double size)
+        {
+            return new Text(text, size);
+        }
+
+        public static Text Italic(Text text)
+        {
+            return new Text(text, FontStyles.Italic);
+        }
+
+        public static Text Decoration(Text text, TextDecoration decoration, params TextDecoration[] moreDecorations)
+        {
+            var textNew = new Text(text);
+            TextDecorationCollection tdc = new TextDecorationCollection {decoration};
+
+            foreach (var more in moreDecorations)
+                tdc.Add(more);
+
+            textNew.formattedText.SetTextDecorations(tdc);
+            textNew.SetDrawing();
+            return textNew;
+        }
+
+        public static Text Flow(FlowDirection flow, Text text)
+        {
+            return new Text(text, flow);
+        }
+
+        public static Text Family(string stFamily, Text text)
+        {
+            return new Text(text, new FontFamily(stFamily));
+        }
+
+        internal Text(string st)
+            : this(
+                st, 14d, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new FontFamily("Consolas"),
+                FontStyles.Normal, FontWeights.Normal, FontStretches.Normal, Brushes.Black)
+        {
+
+        }
+
+        private Text(Text text)
+            : this(
+                text.formattedText.Text, text.size, text.culture, text.flow, text.fontFamily, text.fontStyle,
+                text.fontWeight, text.fontStretch, text.foreground)
+        {
+
+        }
+
+        private Text(Text text, Brush foreground)
+            : this(
+                text.formattedText.Text, text.size, text.culture, text.flow, text.fontFamily, text.fontStyle,
+                text.fontWeight, text.fontStretch, foreground)
+        {
+
+        }
+
+        private Text(Text text, FontFamily family)
+            : this(
+                text.formattedText.Text, text.size, text.culture, text.flow, family, text.fontStyle, text.fontWeight,
+                text.fontStretch, text.foreground)
+        {
+
+        }
+
+        private Text(Text text, FlowDirection flow)
+            : this(
+                text.formattedText.Text, text.size, text.culture, flow, text.fontFamily, text.fontStyle, text.fontWeight,
+                text.fontStretch, text.foreground)
+        {
+        }
+
+        private Text(Text text, FontStyle style)
+            : this(
+                text.formattedText.Text, text.size, text.culture, text.flow, text.fontFamily, style, text.fontWeight,
+                text.fontStretch, text.foreground)
+        {
+        }
+
+        private Text(Text text, FontWeight weight)
+            : this(
+                text.formattedText.Text, text.size, text.culture, text.flow, text.fontFamily, text.fontStyle, weight,
+                text.fontStretch, text.foreground)
+        {
+        }
+
+        private Text(Text text, double size)
+            : this(
+                text.formattedText.Text, size, text.culture, text.flow, text.fontFamily, text.fontStyle, text.fontWeight,
+                text.fontStretch, text.foreground)
+        {
+        }
+
+        private Text(string st, double size, CultureInfo culture, FlowDirection flow, FontFamily fontFamily,
+            FontStyle fontStyle,
+            FontWeight fontWeight, FontStretch fontStretch, Brush foreground)
+        {
+            this.size = size;
+            this.flow = flow;
+            this.culture = culture;
+            this.fontFamily = fontFamily;
+            this.fontStyle = fontStyle;
+            this.fontWeight = fontWeight;
+            this.fontStretch = fontStretch;
+            formattedText = FormattedText(st);
+            this.foreground = foreground;
+            SetDrawing();
+        }
+
+        private void SetDrawing()
+        {
+            drawing = AsDrawingGroup(new GeometryDrawing(foreground, null,
+                formattedText.BuildGeometry(Graphics.PointZero)));
         }
     }
 
