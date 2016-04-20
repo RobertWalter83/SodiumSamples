@@ -1,22 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Text;
 using Sodium;
-using TextChange = Microsoft.CodeAnalysis.Text.TextChange;
 
 namespace LiveScripting
 {
@@ -25,8 +18,10 @@ namespace LiveScripting
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
         private static readonly string saveTarget = $"{AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
         private static readonly List<IListener> rglisteners = new List<IListener>();
-
-        private const string stStartScript = @"using LiveScripting;
+   
+        private const string stStartScript = @"
+                          using LiveScripting;
+                          using LiveScripting.Keyboard;
                           using Sodium;
                           using System;
                           using System.Windows;
@@ -85,9 +80,9 @@ namespace LiveScripting
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
                 cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
 
-                Keyboard.Arrows = CellDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
-                Keyboard.Wasd = CellDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
-                Keyboard.Space = CellSingleKey(sKeys, Key.Space);
+                Keyboard.Stream.Arrows = StreamDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
+                Keyboard.Stream.Wasd = StreamDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
+                Keyboard.Stream.Space = StreamSingleKey(sKeys, Key.Space);
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
@@ -129,13 +124,13 @@ namespace LiveScripting
             });
         }
 
-        private static Cell<bool> CellSingleKey(Stream<KeyEventArgs> sKeys, Key key)
+        private static Stream<bool> StreamSingleKey(Stream<KeyEventArgs> sKeys, Key key)
         {
             Stream<KeyEventArgs> sKey = sKeys.Filter(args => args.Key == key);
-            return sKey.Map(args => args.IsDown).Hold(false);
+            return sKey.Map(args => args.IsDown);
         }
 
-        private static Cell<Tuple<int, int>> CellDirKeys(Stream<KeyEventArgs> sKeys, Key keyUp, Key keyRight, Key keyDown, Key keyLeft)
+        private static Stream<Tuple<int, int>> StreamDirKeys(Stream<KeyEventArgs> sKeys, Key keyUp, Key keyRight, Key keyDown, Key keyLeft)
         {
             Stream<KeyEventArgs> sUp = sKeys.Filter(args => args.Key == keyUp);
             Stream<KeyEventArgs> sDown = sKeys.Filter(args => args.Key == keyDown);
@@ -145,7 +140,7 @@ namespace LiveScripting
             Cell<int> cX = CellDir(sLeft, sRight);
             Cell<int> cY = CellDir(sUp, sDown);
 
-            return cX.Lift(cY, (x, y) => new Tuple<int, int>(x, y));
+            return Operational.Value(cX.Lift(cY, (x, y) => new Tuple<int, int>(x,y)));
         } 
 
         private static Cell<int> CellDir(Stream<KeyEventArgs> sNeg, Stream<KeyEventArgs> sPos)

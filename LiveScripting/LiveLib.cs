@@ -37,12 +37,32 @@ namespace LiveScripting
         { get; internal set; }
     }
 
-    public static class Keyboard
+    namespace Keyboard
     {
-        public static Cell<Tuple<int, int>> Arrows { get; internal set; }
-        public static Cell<Tuple<int, int>> Wasd { get; internal set; }
+        public static class Cell
+        {
+            public static Cell<Tuple<int, int>> Arrows
+            {
+                get { return Stream.Arrows.Hold(new Tuple<int, int>(0, 0)); }
+            }
 
-        public static Cell<bool> Space { get; internal set; }
+            public static Cell<Tuple<int, int>> Wasd
+            {
+                get { return Stream.Wasd.Hold(new Tuple<int, int>(0, 0)); }
+            }
+
+            public static Cell<bool> Space
+            {
+                get { return Stream.Space.Hold(false); }
+            }
+        }
+
+        public static class Stream
+        {
+            public static Stream<Tuple<int, int>> Arrows { get; internal set; }
+            public static Stream<Tuple<int, int>> Wasd { get; internal set; }
+            public static Stream<bool> Space { get; internal set; }
+        }
     }
 
     public static class Screen
