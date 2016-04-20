@@ -23,8 +23,8 @@ namespace LiveScripting
     public partial class MainWindow
     {
         private static readonly StreamSink<string> sDocChanged = new StreamSink<string>();
-        private static readonly string saveTarget = $"{System.AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
-        private static List<IListener> rglisteners = new List<IListener>();
+        private static readonly string saveTarget = $"{AppDomain.CurrentDomain.BaseDirectory}tmp.cs";
+        private static readonly List<IListener> rglisteners = new List<IListener>();
 
         private const string stStartScript = @"using LiveScripting;
                           using Sodium;
@@ -87,6 +87,7 @@ namespace LiveScripting
 
                 Keyboard.Arrows = CellDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
                 Keyboard.Wasd = CellDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
+                Keyboard.Space = CellSingleKey(sKeys, Key.Space);
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
@@ -126,6 +127,12 @@ namespace LiveScripting
                     fs.Close();
                 });
             });
+        }
+
+        private static Cell<bool> CellSingleKey(Stream<KeyEventArgs> sKeys, Key key)
+        {
+            Stream<KeyEventArgs> sKey = sKeys.Filter(args => args.Key == key);
+            return sKey.Map(args => args.IsDown).Hold(false);
         }
 
         private static Cell<Tuple<int, int>> CellDirKeys(Stream<KeyEventArgs> sKeys, Key keyUp, Key keyRight, Key keyDown, Key keyLeft)
