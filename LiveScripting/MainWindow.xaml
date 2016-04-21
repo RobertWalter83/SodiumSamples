@@ -16,9 +16,26 @@
             <ColumnDefinition Width="0.5*" />
             <ColumnDefinition Width="0.5*" />
         </Grid.ColumnDefinitions>
-        
-        <Label Grid.Row="0" Grid.Column="0" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">Type your C# script here</Label>
-        <Label Grid.Row="0" Grid.Column="1" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
+
+        <Border Grid.Row="0" Grid.Column="0" BorderBrush="BlanchedAlmond" BorderThickness="1" Background="Cornsilk">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="0.5*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" BorderBrush="BlanchedAlmond" BorderThickness="1">Type your C# script here</Label>
+                <Label Grid.Column="1" >Samples:</Label>
+
+                <ComboBox Name="cbbSamples" Grid.Column="2" Margin="10,5,10,5" >
+                    <ComboBoxItem Name="itemMovableDrawing">Movable Drawing</ComboBoxItem>
+                    <ComboBoxItem Name="itemPong">Pong</ComboBoxItem>
+                    <ComboBoxItem Name="itemPongElm">Pong (Elm-like)</ComboBoxItem>
+                </ComboBox>
+            </Grid>
+        </Border>
+         <Label Grid.Row="0" Grid.Column="1" Background="Cornsilk" BorderBrush="BlanchedAlmond" BorderThickness="1">See the result here, live</Label>
 
         <Grid Name="gridEdit" Grid.Row="1" Grid.Column="0" >
             <Grid.RowDefinitions>

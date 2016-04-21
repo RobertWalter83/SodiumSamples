@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Folding;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Sodium;
@@ -66,8 +67,7 @@ namespace LiveScripting
                 Mouse.ButtonsStream =
                     sMouseButton.Map(
                         args =>
-                            new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
-                                args.LeftButton, args.MiddleButton, args.RightButton));
+                            Tuple.Create(args.LeftButton, args.MiddleButton, args.RightButton));
 
                 Mouse.ButtonsCell.Listen(FocusResultArea);
 
@@ -96,6 +96,10 @@ namespace LiveScripting
                 Cell<ScriptVariable> cMain =
                     cExecResult.Map(result => GetVariable(result.scriptState, "main"));
 
+                RegisterSample(itemMovableDrawing, CodeProvider.movableFace);
+                RegisterSample(itemPong, CodeProvider.pongAlt);
+                RegisterSample(itemPongElm, CodeProvider.pongElm);
+
                 cMain.Listen(HandleMain);
                 cExecResult.Listen(HandleError);
             });
@@ -120,6 +124,18 @@ namespace LiveScripting
             });
         }
 
+
+        private void RegisterSample(ComboBoxItem item, string code)
+        {
+            StreamSink<RoutedEventArgs> sSample = new StreamSink<RoutedEventArgs>();
+            item.Selected += (sender, args) => sSample.Send(args);
+
+            sSample.Listen(_ =>
+            {
+                this.txtInput.Document.Text = code;
+            });
+        }
+
         private static Stream<bool> StreamSingleKey(Stream<KeyEventArgs> sKeys, Key key)
         {
             Stream<KeyEventArgs> sKey = sKeys.Filter(args => args.Key == key);
@@ -136,7 +152,7 @@ namespace LiveScripting
             Cell<int> cX = CellDir(sLeft, sRight);
             Cell<int> cY = CellDir(sUp, sDown);
 
-            return Operational.Value(cX.Lift(cY, (x, y) => new Tuple<int, int>(x,y)));
+            return Operational.Value(cX.Lift(cY, Tuple.Create));
         } 
 
         private static Cell<int> CellDir(Stream<KeyEventArgs> sNeg, Stream<KeyEventArgs> sPos)
