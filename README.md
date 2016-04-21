@@ -30,6 +30,7 @@ To get started, here are some scripts you can try out. Let me know if they don't
 
 Notice the following aliases to access the static API:
 ```csharp
+using b = LiveScripting.Basic;
 using g = LiveScripting.Graphics;
 using e = LiveScripting.Graphics.Element;
 using t = LiveScripting.Transform;
@@ -37,7 +38,7 @@ using m = LiveScripting.Mouse;
 using k = LiveScripting.Keyboard;
 ```
 
-### 1. Hello World
+### 1.a Hello World
 ```csharp
 var main = 
     e.Show("Hello World"); 
@@ -46,7 +47,7 @@ var main =
 - in general, edit the examples and see what happens in the result area
 - Show is, like in Elm, a sort of "ToString()". You can pass whatever, and it will convert it in a string and display it. It is a tiny bit more sophisticated when it comes to arrays, though. See next example.
 
-### 1.5 Show arrays
+### 1.b Show arrays
 ```csharp
 var main =
 	e.Show(
@@ -122,13 +123,19 @@ Element House()
 var main = House();
 ```
 
-### 5. Get mouse position (reactive, yay!)
+### 5.a Get mouse position (reactive, yay!)
 ```csharp
 var main =
-	m.MousePos.Map(e.Show);
+	m.PosCell.Map(e.Show);
 ```
 - Move your mouse over the result view (right half)
 
+### 5.b Get mouse buttons 
+```csharp
+var main =
+	m.ButtonsCell.Map(e.Show);
+```
+- Click with left, middle, and right mouse buttons in result view
 
 ### 6. Keyboard state
 ```csharp
@@ -137,8 +144,6 @@ var main =
 ```
 - Set focus into the result area and press the arrow keys
 - Replace the "Arrows" by "Wasd"
-
-There is a known issue where the text editor sometimes doesn't show a caret anymore once you switched focus. If that happens, you have to restart.
 
 ### 7. Move a Drawing
 ```csharp
@@ -171,13 +176,6 @@ Element View(Point point)
 		t.Move(g.AsDrawing(face), point.X, point.Y));
 }
 
-// an input stream: over time, we 'snapshot' the arrow key state
-Stream<Tuple<int, int>> StreamInput()
-{
-	return Time.Ticks.Snapshot(
-		Keyboard.Arrows, (dt, arrows) => arrows);  
-}
-
 // update the current point with current input state
 Point NewPoint(Tuple<int, int> input, Point pointOld)
 {
@@ -185,7 +183,7 @@ Point NewPoint(Tuple<int, int> input, Point pointOld)
 }
 
 var main = 
-	StreamInput().Accum(new Point(0, 0), NewPoint).Map(View);
+	k.ArrowsStream.Accum(new Point(0, 0), NewPoint).Map(View);
 ```
 - Set focus in the result area and hold arrow keys to move face
 
