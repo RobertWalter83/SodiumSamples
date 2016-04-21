@@ -11,6 +11,19 @@ using Sodium;
 
 namespace LiveScripting
 {
+
+    internal static class Util
+    {
+        internal static Tuple<T, T> AsTuple2<T>(this T item)
+        {
+            return Tuple.Create(item, item);
+        }
+
+        internal static Tuple<T, T, T> AsTuple3<T>(this T item)
+        {
+            return Tuple.Create(item, item, item);
+        }
+    }
     public static class Basic
     {
         public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
@@ -35,13 +48,7 @@ namespace LiveScripting
 
         public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> ButtonsCell
         {
-            get
-            {
-                return
-                    ButtonsStream.Calm().Hold(
-                        new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(MouseButtonState.Released,
-                            MouseButtonState.Released, MouseButtonState.Released));
-            }
+            get { return ButtonsStream.Calm().Hold(MouseButtonState.Released.AsTuple3()); }
         }
 
         public static Stream<Point> PosStream { get; internal set; }
@@ -54,12 +61,12 @@ namespace LiveScripting
     {
         public static Cell<Tuple<int, int>> ArrowsCell
         {
-            get { return ArrowsStream.Calm().Hold(new Tuple<int, int>(0, 0)); }
+            get { return ArrowsStream.Calm().Hold(0.AsTuple2()); }
         }
 
         public static Cell<Tuple<int, int>> WasdCell
         {
-            get { return WasdStream.Calm().Hold(new Tuple<int, int>(0, 0)); }
+            get { return WasdStream.Calm().Hold(0.AsTuple2()); }
         }
 
         public static Cell<bool> SpaceCell
