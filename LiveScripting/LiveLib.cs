@@ -31,38 +31,43 @@ namespace LiveScripting
     }
     public static class Mouse
     {
-        public static Cell<Point> MousePos { get; internal set; }
+        public static Cell<Point> Pos { get { return PosStream.Hold(Graphics.PointZero); } }
 
-        public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> MouseButtons
+        public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> Buttons
+        { get
+        {
+            return
+                ButtonsStream.Hold(
+                    new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(MouseButtonState.Released,
+                        MouseButtonState.Released, MouseButtonState.Released));
+        } }
+
+        public static Stream<Point> PosStream { get; internal set; }
+
+        public static Stream<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> ButtonsStream
         { get; internal set; }
     }
 
-    namespace Keyboard
+    public static class Keyboard
     {
-        public static class Cell
+        public static Cell<Tuple<int, int>> ArrowsCell
         {
-            public static Cell<Tuple<int, int>> Arrows
-            {
-                get { return Stream.Arrows.Hold(new Tuple<int, int>(0, 0)); }
-            }
-
-            public static Cell<Tuple<int, int>> Wasd
-            {
-                get { return Stream.Wasd.Hold(new Tuple<int, int>(0, 0)); }
-            }
-
-            public static Cell<bool> Space
-            {
-                get { return Stream.Space.Hold(false); }
-            }
+            get { return ArrowsStream.Hold(new Tuple<int, int>(0, 0)); }
         }
 
-        public static class Stream
+        public static Cell<Tuple<int, int>> WasdCell
         {
-            public static Stream<Tuple<int, int>> Arrows { get; internal set; }
-            public static Stream<Tuple<int, int>> Wasd { get; internal set; }
-            public static Stream<bool> Space { get; internal set; }
+            get { return WasdStream.Hold(new Tuple<int, int>(0, 0)); }
         }
+
+        public static Cell<bool> SpaceCell
+        {
+            get { return SpaceStream.Hold(false); }
+        }
+
+        public static Stream<Tuple<int, int>> ArrowsStream { get; internal set; }
+        public static Stream<Tuple<int, int>> WasdStream { get; internal set; }
+        public static Stream<bool> SpaceStream { get; internal set; }
     }
 
     public static class Screen

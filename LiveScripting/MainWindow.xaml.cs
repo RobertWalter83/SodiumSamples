@@ -21,7 +21,6 @@ namespace LiveScripting
    
         private const string stStartScript = @"
                           using LiveScripting;
-                          using LiveScripting.Keyboard;
                           using Sodium;
                           using System;
                           using System.Windows;
@@ -59,29 +58,26 @@ namespace LiveScripting
                 cvsResult.MouseMove += (sender, args) => sMouseMove.Send(args);
 
                 Cell<Canvas> cCvs = Cell.Constant(cvsResult);
-                Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs))
-                    .Hold(Graphics.PointZero);
+                Mouse.PosStream = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs));
 
                 StreamSink<MouseEventArgs> sMouseButton = new StreamSink<MouseEventArgs>();
                 cvsResult.MouseDown += (sender, args) => sMouseButton.Send(args);
                 cvsResult.MouseUp += (sender, args) => sMouseButton.Send(args);
-                Mouse.MouseButtons =
+                Mouse.ButtonsStream =
                     sMouseButton.Map(
                         args =>
                             new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
-                                args.LeftButton, args.MiddleButton, args.RightButton))
-                        .Hold(new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
-                            MouseButtonState.Released, MouseButtonState.Released, MouseButtonState.Released));
+                                args.LeftButton, args.MiddleButton, args.RightButton));
 
-                Mouse.MouseButtons.Listen(FocusResultArea);
+                Mouse.Buttons.Listen(FocusResultArea);
 
                 StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
                 cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
 
-                Keyboard.Stream.Arrows = StreamDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
-                Keyboard.Stream.Wasd = StreamDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
-                Keyboard.Stream.Space = StreamSingleKey(sKeys, Key.Space);
+                Keyboard.ArrowsStream = StreamDirKeys(sKeys, Key.Up, Key.Right, Key.Down, Key.Left);
+                Keyboard.WasdStream = StreamDirKeys(sKeys, Key.W, Key.D, Key.S, Key.A);
+                Keyboard.SpaceStream = StreamSingleKey(sKeys, Key.Space);
 
                 /**
                  * we create a constant scriptState that holds all assemblies and usings we want in our editor by default
