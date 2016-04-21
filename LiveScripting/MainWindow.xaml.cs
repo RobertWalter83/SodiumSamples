@@ -69,7 +69,7 @@ namespace LiveScripting
                             new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(
                                 args.LeftButton, args.MiddleButton, args.RightButton));
 
-                Mouse.Buttons.Listen(FocusResultArea);
+                Mouse.ButtonsCell.Listen(FocusResultArea);
 
                 StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
@@ -141,8 +141,8 @@ namespace LiveScripting
 
         private static Cell<int> CellDir(Stream<KeyEventArgs> sNeg, Stream<KeyEventArgs> sPos)
         {
-            Cell<int> cDec = sNeg.Map(args => args.IsDown ? -1 : 0).Calm().Hold(0);
-            Cell<int> cInc = sPos.Map(args => args.IsDown ? 1 : 0).Calm().Hold(0);
+            Cell<int> cDec = sNeg.Map(args => args.IsDown ? -1 : 0).Hold(0);
+            Cell<int> cInc = sPos.Map(args => args.IsDown ? 1 : 0).Hold(0);
             return cDec.Lift(cInc, (dec, inc) => dec + inc);
         }
 

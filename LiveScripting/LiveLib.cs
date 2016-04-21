@@ -31,16 +31,18 @@ namespace LiveScripting
     }
     public static class Mouse
     {
-        public static Cell<Point> Pos { get { return PosStream.Hold(Graphics.PointZero); } }
+        public static Cell<Point> PosCell { get { return PosStream.Calm().Hold(Graphics.PointZero); } }
 
-        public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> Buttons
-        { get
+        public static Cell<Tuple<MouseButtonState, MouseButtonState, MouseButtonState>> ButtonsCell
         {
-            return
-                ButtonsStream.Hold(
-                    new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(MouseButtonState.Released,
-                        MouseButtonState.Released, MouseButtonState.Released));
-        } }
+            get
+            {
+                return
+                    ButtonsStream.Calm().Hold(
+                        new Tuple<MouseButtonState, MouseButtonState, MouseButtonState>(MouseButtonState.Released,
+                            MouseButtonState.Released, MouseButtonState.Released));
+            }
+        }
 
         public static Stream<Point> PosStream { get; internal set; }
 
@@ -52,17 +54,17 @@ namespace LiveScripting
     {
         public static Cell<Tuple<int, int>> ArrowsCell
         {
-            get { return ArrowsStream.Hold(new Tuple<int, int>(0, 0)); }
+            get { return ArrowsStream.Calm().Hold(new Tuple<int, int>(0, 0)); }
         }
 
         public static Cell<Tuple<int, int>> WasdCell
         {
-            get { return WasdStream.Hold(new Tuple<int, int>(0, 0)); }
+            get { return WasdStream.Calm().Hold(new Tuple<int, int>(0, 0)); }
         }
 
         public static Cell<bool> SpaceCell
         {
-            get { return SpaceStream.Hold(false); }
+            get { return SpaceStream.Calm().Hold(false); }
         }
 
         public static Stream<Tuple<int, int>> ArrowsStream { get; internal set; }
