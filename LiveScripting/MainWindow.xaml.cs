@@ -38,7 +38,6 @@ namespace LiveScripting
         public MainWindow()
         {
             InitializeComponent();
-
             
             this.cvsResult.FocusVisualStyle = new Style();
 
@@ -52,14 +51,14 @@ namespace LiveScripting
                 Screen.Size = sSize.Accum(new Size(0, 0), (args, size) => args.NewSize);
 
                 StreamSink<RenderingEventArgs> sRenderEvents = new StreamSink<RenderingEventArgs>();
-                CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs) args);
+                CompositionTarget.Rendering += (sender, args) => sRenderEvents.Send((RenderingEventArgs)args);
                 Time.Ticks = sRenderEvents.Collect(TimeSpan.Zero,
                     (re, t) => Tuple.Create(re.RenderingTime - t, re.RenderingTime));
 
                 StreamSink<MouseEventArgs> sMouseMove = new StreamSink<MouseEventArgs>();
                 cvsResult.MouseMove += (sender, args) => sMouseMove.Send(args);
-                Cell<Canvas> cCvs = Cell.Constant(cvsResult);
 
+                Cell<Canvas> cCvs = Cell.Constant(cvsResult);
                 Mouse.MousePos = sMouseMove.Snapshot(cCvs, (args, cvs) => args.GetPosition(cvs))
                     .Hold(Graphics.PointZero);
 
@@ -105,6 +104,7 @@ namespace LiveScripting
                 cExecResult.Listen(HandleError);
             });
 
+            // save command for development purposes
             Transaction.RunVoid(() =>
             {
                 StreamSink<KeyEventArgs> sKeysInput = new StreamSink<KeyEventArgs>();
@@ -157,11 +157,9 @@ namespace LiveScripting
                 tuple.Item3 == MouseButtonState.Pressed)
                 this.cvsResult.Focus();
         }
-
-
+        
         private void HandleMain(ScriptVariable main)
         {
-            
             if (main == null)
             {
                 Draw(new Text("<nothing to render>\nno main variable found"));
@@ -260,11 +258,13 @@ namespace LiveScripting
          * "intermediate steps" of the script as well, which can have weird side effects for the user.
          * In case of a compiler error, we keep the last script state alive and store the compiler error to display it on the screen
          */
-        private ExecutionResult Execute(string code, ExecutionResult executionResult, ScriptState<object> scriptStart)
+        private ExecutionResult Execute(string code, ExecutionResult execOld, ScriptState<object> scriptStart)
         {
+            ExecutionResult execNew;
             try
             {
-                return new ExecutionResult(scriptStart.ContinueWithAsync(code).Result, null);
+                execNew = new ExecutionResult(scriptStart.ContinueWithAsync(code).Result, null);
+                GC.Collect();
             }
             catch (Exception ex)
             {
@@ -276,8 +276,10 @@ namespace LiveScripting
                 else
                     errorMessage = "Unknown error: " + ex.Message;
 
-                return new ExecutionResult(executionResult.scriptState, errorMessage);
+                return new ExecutionResult(execOld.scriptState, errorMessage);
             }
+
+            return execNew;
         }
 
         private struct ExecutionResult
