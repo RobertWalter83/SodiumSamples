@@ -99,6 +99,7 @@ namespace LiveScripting
                 RegisterSample(itemHelloWorld, CodeProvider.helloWorld);
                 RegisterSample(itemArrays, CodeProvider.helloArray);
                 RegisterSample(itemHouse, CodeProvider.house);
+                RegisterSample(itemHouseCentered, CodeProvider.houseCentered);
                 RegisterSample(itemMovableDrawing, CodeProvider.movableFace);
                 RegisterSample(itemPong, CodeProvider.pongAlt);
                 RegisterSample(itemPongElm, CodeProvider.pongElm);
