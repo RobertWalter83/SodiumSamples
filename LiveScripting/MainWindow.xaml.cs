@@ -103,7 +103,7 @@ namespace LiveScripting
                 RegisterSample(itemMovableDrawing, CodeProvider.movableFace);
                 RegisterSample(itemPong, CodeProvider.pongAlt);
                 RegisterSample(itemPongElm, CodeProvider.pongElm);
-
+                
                 cMain.Listen(HandleMain);
                 cExecResult.Listen(HandleError);
             });
