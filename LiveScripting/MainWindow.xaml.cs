@@ -96,6 +96,9 @@ namespace LiveScripting
                 Cell<ScriptVariable> cMain =
                     cExecResult.Map(result => GetVariable(result.scriptState, "main"));
 
+                RegisterSample(itemHelloWorld, CodeProvider.helloWorld);
+                RegisterSample(itemArrays, CodeProvider.helloArray);
+                RegisterSample(itemHouse, CodeProvider.house);
                 RegisterSample(itemMovableDrawing, CodeProvider.movableFace);
                 RegisterSample(itemPong, CodeProvider.pongAlt);
                 RegisterSample(itemPongElm, CodeProvider.pongElm);
