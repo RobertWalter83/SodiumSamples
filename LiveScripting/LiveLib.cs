@@ -11,8 +11,7 @@ using Sodium;
 
 namespace LiveScripting
 {
-
-    internal static class Util
+        internal static class Util
     {
         internal static Tuple<T, T> AsTuple2<T>(this T item)
         {
@@ -88,7 +87,7 @@ namespace LiveScripting
     {
         internal static readonly Point PointZero = new Point(0, 0);
         
-        public static LiveScripting.Element Collage(int w, int h, params Drawing[] drawings)
+        public static Element Collage(int w, int h, params Drawing[] drawings)
         {
             DrawingGroup dg = new DrawingGroup {ClipGeometry = new RectangleGeometry(RectFromDim(w, h))};
             foreach (var drawing in drawings)
@@ -98,103 +97,7 @@ namespace LiveScripting
                 dg.Children.Add(drawing);
             }
 
-            return new LiveScripting.Element(dg);
-        }
-
-        public static class Element
-        {
-            public static LiveScripting.Element Show<T>(T t)
-            {
-                return Text(ToString(t));
-            }
-
-            public static LiveScripting.Element Show(object a)
-            {
-                return Show<object>(a);
-            }
-
-            private static string ToString(object a)
-            {
-                if (!a.GetType().IsArray)
-                    return a.ToString();
-                
-                var en = a as IEnumerable;
-                return $"[ {string.Join(", ", (from object element in en select ToString(element)).ToArray())} ]";
-            }
-
-            public static LiveScripting.Element Image(int w, int h, string src)
-            {
-                return new Image(w, h, src);
-            }
-
-            public static LiveScripting.Element Text(string st)
-            {
-                return new Text(st);
-            }
-
-            public static LiveScripting.Element Container(int w, int h, Position p, LiveScripting.Element e)
-            {
-                var shapeContainer = Rect(w, h);
-                var drawingContainer = ToDrawing(shapeContainer, Brushes.Transparent, null);
-                var drawingContent = AsDrawing(e);
-                return Collage(w, h, drawingContainer, TransformTo(w, h, p, drawingContent));
-            }
-
-            private static Drawing TransformTo(int w, int h, Position p, Drawing content)
-            {
-                double offsetX = 0;
-                double offsetY = 0;
-                double dx = w - content.Bounds.Width;
-                double dy = h - content.Bounds.Height;
-                switch (p)
-                {
-                    case Position.topLeft:
-                        break;
-                    case Position.topRight:
-                        offsetX = dx;
-                        break;
-                    case Position.middle:
-                        offsetX = dx/2;
-                        offsetY = dy/2;
-                        break;
-                    case Position.midTop:
-                        offsetX = dx/2;
-                        break;
-                    case Position.midBottom:
-                        offsetX = dx/2;
-                        offsetY = dy;
-                        break;
-                    case Position.midLeft:
-                        offsetY = dy/2;
-                        break;
-                    case Position.midRight:
-                        offsetX = dx;
-                        offsetY = dy/2;
-                        break;
-                    case Position.bottomLeft:
-                        offsetY = dy;
-                        break;
-                    case Position.bottomRight:
-                        offsetX = dx;
-                        offsetY = dy;
-                        break;
-
-                }
-                return Transform.Move(content, offsetX, offsetY);
-            }
-
-            public enum Position
-            {
-                middle,
-                midTop,
-                midBottom,
-                midLeft,
-                midRight,
-                topLeft,
-                topRight,
-                bottomLeft,
-                bottomRight
-            }
+            return new Element(dg);
         }
 
         public static Shape Rect(double w, double h)
@@ -230,7 +133,7 @@ namespace LiveScripting
             return shape.DrawWith(b, p);
         }
 
-        public static Drawing AsDrawing(LiveScripting.Element ele)
+        public static Drawing AsDrawing(Element ele)
         {
             return ele.drawing.Clone();
         }
@@ -341,7 +244,7 @@ namespace LiveScripting
         internal Drawing drawing;
 
         protected Element()
-        {}
+        { }
 
         internal Element(Drawing drawing)
         {
@@ -359,6 +262,98 @@ namespace LiveScripting
             dg.Children.Add(drawing);
             return dg;
         }
+        public static Element Show<T>(T t)
+        {
+            return Text(ToString(t));
+        }
+
+        public static Element Show(object a)
+        {
+            return Show<object>(a);
+        }
+
+        private static string ToString(object a)
+        {
+            if (!a.GetType().IsArray)
+                return a.ToString();
+
+            var en = a as IEnumerable;
+            return $"[ {string.Join(", ", (from object element in en select ToString(element)).ToArray())} ]";
+        }
+
+        public static Element Image(int w, int h, string src)
+        {
+            return new Image(w, h, src);
+        }
+
+        public static Element Text(string st)
+        {
+            return new Text(st);
+        }
+
+        public static Element Container(int w, int h, Position p, Element e)
+        {
+            var shapeContainer = Graphics.Rect(w, h);
+            var drawingContainer = Graphics.ToDrawing(shapeContainer, Brushes.Transparent, null);
+            var drawingContent = Graphics.AsDrawing(e);
+            return Graphics.Collage(w, h, drawingContainer, TransformTo(w, h, p, drawingContent));
+        }
+
+        private static Drawing TransformTo(int w, int h, Position p, Drawing content)
+        {
+            double offsetX = 0;
+            double offsetY = 0;
+            double dx = w - content.Bounds.Width;
+            double dy = h - content.Bounds.Height;
+            switch (p)
+            {
+                case Position.topLeft:
+                    break;
+                case Position.topRight:
+                    offsetX = dx;
+                    break;
+                case Position.middle:
+                    offsetX = dx / 2;
+                    offsetY = dy / 2;
+                    break;
+                case Position.midTop:
+                    offsetX = dx / 2;
+                    break;
+                case Position.midBottom:
+                    offsetX = dx / 2;
+                    offsetY = dy;
+                    break;
+                case Position.midLeft:
+                    offsetY = dy / 2;
+                    break;
+                case Position.midRight:
+                    offsetX = dx;
+                    offsetY = dy / 2;
+                    break;
+                case Position.bottomLeft:
+                    offsetY = dy;
+                    break;
+                case Position.bottomRight:
+                    offsetX = dx;
+                    offsetY = dy;
+                    break;
+
+            }
+            return Transform.Move(content, offsetX, offsetY);
+        }
+
+        public enum Position
+        {
+            middle,
+            midTop,
+            midBottom,
+            midLeft,
+            midRight,
+            topLeft,
+            topRight,
+            bottomLeft,
+            bottomRight
+        }
     }
 
     internal class Image : Element
@@ -371,7 +366,7 @@ namespace LiveScripting
                 drawing = AsDrawingGroup(new ImageDrawing(new BitmapImage(new Uri(src, UriKind.RelativeOrAbsolute)),
                     Graphics.RectFromDim(w, h)));
             else
-                drawing = AsDrawingGroup(Graphics.AsDrawing(Graphics.Element.Text($"File '{src}' not found.")));
+                drawing = AsDrawingGroup(Graphics.AsDrawing(Element.Text($"File '{src}' not found.")));
 
             this.src = src;
         }

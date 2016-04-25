@@ -25,12 +25,13 @@ namespace LiveScripting
                           using Sodium;
                           using System;
                           using System.Windows;
+                          using System.Windows.Input;
                           using System.Windows.Media;
                           using System.Collections.Generic;
                           
                           using b = LiveScripting.Basic;
                           using g = LiveScripting.Graphics;
-                          using e = LiveScripting.Graphics.Element;
+                          using e = LiveScripting.Element;
                           using t = LiveScripting.Transform;
                           using m = LiveScripting.Mouse;
                           using k = LiveScripting.Keyboard;";
@@ -71,6 +72,25 @@ namespace LiveScripting
 
                 Mouse.ButtonsCell.Listen(FocusResultArea);
 
+                var sMouseCtrlPressed = sMouseMove.Filter(_ => IsCtrlPressed());
+                var sDrawing = sMouseCtrlPressed.Snapshot(cCvs, (args, cvs) => 
+                {
+                    Point pt = args.GetPosition(cvs);
+                    DrawingGroup dg = VisualTreeHelper.GetDrawing(vh.Dv);
+
+                    return GetHitDrawing(dg, pt);
+                });
+
+                sDrawing.Listen(drawing => 
+                {
+                    var geometry = ((GeometryDrawing)drawing).Geometry.Clone();
+                    var drawingNew = new GeometryDrawing(Brushes.Red, null, geometry);
+                    using (var dc = vh.Dv.RenderOpen())
+                    {
+                        dc.DrawDrawing(drawingNew);
+                    }
+                });
+
                 StreamSink<KeyEventArgs> sKeys = new StreamSink<KeyEventArgs>();
                 cvsResult.KeyDown += (sender, args) => sKeys.Send(args);
                 cvsResult.KeyUp += (sender, args) => sKeys.Send(args);
@@ -100,7 +120,9 @@ namespace LiveScripting
                 RegisterSample(itemArrays, CodeProvider.helloArray);
                 RegisterSample(itemHouse, CodeProvider.house);
                 RegisterSample(itemHouseCentered, CodeProvider.houseCentered);
-                RegisterSample(itemMovableDrawing, CodeProvider.movableFace);
+                RegisterSample(itemMovableDrawingKeyboard, CodeProvider.movableFaceKeyboard);
+                RegisterSample(itemMovableDrawingMousePos, CodeProvider.movableFaceMousePos);
+                RegisterSample(itemMovableDrawingMouseClick, CodeProvider.movableFaceMouseClick);
                 RegisterSample(itemPong, CodeProvider.pongAlt);
                 RegisterSample(itemPongElm, CodeProvider.pongElm);
                 
@@ -114,10 +136,7 @@ namespace LiveScripting
                 StreamSink<KeyEventArgs> sKeysInput = new StreamSink<KeyEventArgs>();
                 this.txtInput.KeyDown += (sender, args) => sKeysInput.Send(args);
                 Stream<Unit> sSaveCommand = sKeysInput.Filter(args => args.IsDown && args.Key == Key.S &&
-                                                                      (System.Windows.Input.Keyboard.IsKeyDown(
-                                                                          Key.LeftCtrl) ||
-                                                                       System.Windows.Input.Keyboard.IsKeyDown(
-                                                                           Key.RightCtrl))).Map(_ => Unit.Value);
+                                                                      IsCtrlPressed()).Map(_ => Unit.Value);
 
                 sSaveCommand.Listen(_ =>
                 {
@@ -126,6 +145,34 @@ namespace LiveScripting
                     fs.Close();
                 });
             });
+        }
+
+        private static Drawing GetHitDrawing(DrawingGroup dg, Point pt)
+        {
+            DrawingCollection drawingCollection = dg.Children;
+
+            // Enumerate the drawings in the DrawingCollection.
+            foreach (Drawing drawing in drawingCollection)
+            {
+                // If the drawing is a DrawingGroup, call the function recursively.
+                if (drawing.GetType() == typeof(DrawingGroup))
+                {
+                    GetHitDrawing((DrawingGroup)drawing, pt);
+                }
+                else if (drawing.GetType() == typeof(GeometryDrawing))
+                {
+                    // Determine whether the hit test point falls within the geometry.
+                    if (((GeometryDrawing)drawing).Geometry.FillContains(pt))
+                        return drawing;
+                }
+            }
+            return null;
+        }
+
+        private static bool IsCtrlPressed()
+        {
+            return System.Windows.Input.Keyboard.IsKeyDown(Key.LeftCtrl) ||
+                   System.Windows.Input.Keyboard.IsKeyDown(Key.RightCtrl);
         }
 
 

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:LiveScripting"
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="Live Scripting C# with Avalon Editor" Height="550" Width="825" KeyboardNavigation.DirectionalNavigation="Once">
+        Title="Live Scripting C# with Sodium, Roslyn, and AvalonEdit" Height="800" Width="1200" KeyboardNavigation.DirectionalNavigation="Once">
     <Grid Name="gridMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
@@ -33,7 +33,9 @@
                     <ComboBoxItem Name="itemArrays">Show Arrays</ComboBoxItem>
                     <ComboBoxItem Name="itemHouse">Draw a House</ComboBoxItem>
                     <ComboBoxItem Name="itemHouseCentered">Center the House</ComboBoxItem>
-                    <ComboBoxItem Name="itemMovableDrawing">Movable Drawing</ComboBoxItem>
+                    <ComboBoxItem Name="itemMovableDrawingKeyboard">Movable Drawing (Keyboard Arrows)</ComboBoxItem>
+                    <ComboBoxItem Name="itemMovableDrawingMousePos">Movable Drawing (Mouse Position)</ComboBoxItem>
+                    <ComboBoxItem Name="itemMovableDrawingMouseClick">Movable Drawing (Mouse Click)</ComboBoxItem>
                     <ComboBoxItem Name="itemPong">Pong</ComboBoxItem>
                     <ComboBoxItem Name="itemPongElm">Pong (Elm-like)</ComboBoxItem>
                 </ComboBox>
