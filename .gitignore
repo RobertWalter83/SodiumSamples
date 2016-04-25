@@ -1,3 +1,12 @@
 **bin/
 **obj/
 .suo
+AvalonFrp/
+DialogDSLSimple/
+DialogSimple/
+DrawingVisualText/
+LiveCanvas/
+LiveLib/
+packages/
+RichTextFrp/
+SampleCanvas/
