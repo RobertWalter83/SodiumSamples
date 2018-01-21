@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sodium">
-      <HintPath>E:\libs\sodium-master\c#\src\Sodium\Sodium\bin\Debug\Sodium.dll</HintPath>
+      <HintPath>D:\libs\sodium-master\c#\src\Sodium\Sodium\bin\Release\Sodium.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

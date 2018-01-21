@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SodiumPong", "SodiumPong\So
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveScripting", "LiveScripting\LiveScripting.csproj", "{C69BF05E-08C3-4A88-8ED7-BE351EB03BBC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawingVisualTest", "DrawingVisualText\DrawingVisualTest.csproj", "{12D9EB19-9ECB-447F-8A54-E4BFBBA2835D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C69BF05E-08C3-4A88-8ED7-BE351EB03BBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C69BF05E-08C3-4A88-8ED7-BE351EB03BBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C69BF05E-08C3-4A88-8ED7-BE351EB03BBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12D9EB19-9ECB-447F-8A54-E4BFBBA2835D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12D9EB19-9ECB-447F-8A54-E4BFBBA2835D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12D9EB19-9ECB-447F-8A54-E4BFBBA2835D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12D9EB19-9ECB-447F-8A54-E4BFBBA2835D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

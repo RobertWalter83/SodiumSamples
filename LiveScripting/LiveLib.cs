@@ -128,6 +128,22 @@ namespace LiveScripting
             return path;
         }
 
+        public static Shape Ngon(int n, double r)
+        {
+            return Path(Enumerable.Range(0, n).Select(i => NGonPoint(n, r, i)));
+        }
+
+        private static Point NGonPoint(double n, double r, double i)
+        {
+            return new Point(NGonCoord(n, r, i, Math.Cos), NGonCoord(n, r, i, Math.Sin));
+        }
+
+        private static double NGonCoord(double n, double r, double i, Func<double, double> funcTrigonometry)
+        {
+            var angle = 2 * Math.PI / n * i;
+            return r * funcTrigonometry.Invoke(angle);
+        }
+
         public static Drawing ToDrawing(Shape shape, Brush b, Pen p)
         {
             return shape.DrawWith(b, p);
@@ -213,6 +229,7 @@ namespace LiveScripting
     {
         internal readonly PathFigure pathFigure;
         private static readonly Point pointNaN = new Point(double.NaN, double.NaN);
+
         public Path(double w, double h) : base(w, h)
         {
             pathFigure = new PathFigure(pointNaN, new List<PathSegment>(), false);
@@ -228,6 +245,10 @@ namespace LiveScripting
 
         internal override Geometry GeometryForDrawing()
         {
+            if (!pathFigure.StartPoint.Equals(((LineSegment)pathFigure.Segments.Last()).Point))
+            {
+                pathFigure.Segments.Add(new LineSegment(pathFigure.StartPoint, false));
+            }
             foreach (var segment in pathFigure.Segments)
                 segment.IsStroked = true;
             return base.GeometryForDrawing();
