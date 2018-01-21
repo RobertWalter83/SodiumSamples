@@ -133,14 +133,14 @@ namespace LiveScripting
             return Path(Enumerable.Range(0, n).Select(i => NGonPoint(n, r, i)));
         }
 
-        private static Point NGonPoint(double n, double r, double i)
+        private static Point NGonPoint(int n, double r, int i)
         {
             return new Point(NGonCoord(n, r, i, Math.Cos), NGonCoord(n, r, i, Math.Sin));
         }
 
-        private static double NGonCoord(double n, double r, double i, Func<double, double> funcTrigonometry)
+        private static double NGonCoord(int n, double r, int i, Func<double, double> funcTrigonometry)
         {
-            var angle = 2 * Math.PI / n * i;
+            var angle = 2 * i * Math.PI / n;
             return r * funcTrigonometry.Invoke(angle);
         }
 
